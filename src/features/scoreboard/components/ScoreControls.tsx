@@ -1,5 +1,6 @@
 type ScoreControlsProps = {
   playerName: string;
+  canAddPoint: boolean;
   canRemovePoint: boolean;
   onAddPoint: () => void;
   onRemovePoint: () => void;
@@ -7,6 +8,7 @@ type ScoreControlsProps = {
 
 export function ScoreControls({
   playerName,
+  canAddPoint,
   canRemovePoint,
   onAddPoint,
   onRemovePoint,
@@ -24,7 +26,8 @@ export function ScoreControls({
       </button>
       <button
         aria-label={`Adicionar ponto para ${playerName}`}
-        className="min-h-14 rounded-md bg-teal-300 px-4 text-2xl font-bold text-zinc-950 transition hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-100"
+        className="min-h-14 rounded-md bg-teal-300 px-4 text-2xl font-bold text-zinc-950 transition enabled:hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-100 disabled:cursor-not-allowed disabled:opacity-35"
+        disabled={!canAddPoint}
         onClick={onAddPoint}
         type="button"
       >

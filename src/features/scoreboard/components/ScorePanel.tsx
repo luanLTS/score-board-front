@@ -7,6 +7,8 @@ import { ScoreValue } from "./ScoreValue";
 type ScorePanelProps = {
   index: number;
   player: ScoreboardPlayer;
+  canAddPoint: boolean;
+  canRemovePoint: boolean;
   onAddPoint: () => void;
   onRemovePoint: () => void;
   onRename: (name: string) => void;
@@ -15,6 +17,8 @@ type ScorePanelProps = {
 export function ScorePanel({
   index,
   player,
+  canAddPoint,
+  canRemovePoint,
   onAddPoint,
   onRemovePoint,
   onRename,
@@ -38,7 +42,8 @@ export function ScorePanel({
       </div>
 
       <ScoreControls
-        canRemovePoint={player.score > 0}
+        canAddPoint={canAddPoint}
+        canRemovePoint={canRemovePoint}
         onAddPoint={onAddPoint}
         onRemovePoint={onRemovePoint}
         playerName={displayName}

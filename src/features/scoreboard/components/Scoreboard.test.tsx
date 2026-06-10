@@ -70,4 +70,31 @@ describe("Scoreboard", () => {
       }),
     ).toBeInTheDocument();
   });
+
+  it("lets users select truco rules and disables scoring at the maximum", async () => {
+    const user = userEvent.setup();
+
+    render(<Scoreboard />);
+
+    await user.selectOptions(screen.getByLabelText("Tipo de jogo"), "truco");
+
+    const addPoint = screen.getByRole("button", {
+      name: "Adicionar ponto para Jogador 1",
+    });
+
+    for (let points = 0; points < 12; points += 1) {
+      await user.click(addPoint);
+    }
+
+    expect(screen.getByLabelText(/Pontuação de Jogador 1/)).toHaveTextContent(
+      "12",
+    );
+    expect(addPoint).toBeDisabled();
+
+    await user.click(addPoint);
+
+    expect(screen.getByLabelText(/Pontuação de Jogador 1/)).toHaveTextContent(
+      "12",
+    );
+  });
 });
