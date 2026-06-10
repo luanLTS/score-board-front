@@ -33,12 +33,18 @@ New-Item -ItemType SymbolicLink -Path .worktrees/<nome-da-branch>/node_modules -
 
 Se a worktree estiver fora da raiz do projeto, use o caminho absoluto da `node_modules` da raiz como `-Target`.
 
+Se o Windows bloquear links simbolicos por permissao, use um junction apontando para a `node_modules` da raiz:
+
+```powershell
+New-Item -ItemType Junction -Path .worktrees/<nome-da-branch>/node_modules -Target (Resolve-Path node_modules).Path
+```
+
 Regras:
 
 - A raiz do projeto deve ser a fonte unica de `node_modules`.
 - Instale ou atualize dependencias apenas na raiz do projeto quando `package.json` ou `package-lock.json` mudarem.
-- Cada nova worktree deve receber o link simbolico antes de rodar `npm.cmd test`, `npm.cmd run typecheck`, `npm.cmd run build` ou `npm.cmd run dev`.
-- Se o Windows bloquear links simbolicos por permissao, pare e avise antes de usar outra estrategia.
+- Cada nova worktree deve receber o link simbolico ou junction antes de rodar `npm.cmd test`, `npm.cmd run typecheck`, `npm.cmd run build` ou `npm.cmd run dev`.
+- Se symlink e junction falharem, pare e avise antes de usar outra estrategia.
 
 ## Estrutura De Pastas
 
