@@ -1,9 +1,16 @@
 import { INITIAL_SCOREBOARD_STATE } from "../constants";
 import type {
+  ScoreboardConfig,
   ScoreboardPlayer,
   ScoreboardPlayerId,
   ScoreboardState,
 } from "../types";
+
+const DEFAULT_SCOREBOARD_CONFIG: ScoreboardConfig = {
+  gameKind: "generic",
+  minScore: 0,
+  allowNegativeScore: false,
+};
 
 const updatePlayer = (
   state: ScoreboardState,
@@ -33,19 +40,21 @@ export const updatePlayerName = (
 export const incrementPlayerScore = (
   state: ScoreboardState,
   playerId: ScoreboardPlayerId,
+  config = DEFAULT_SCOREBOARD_CONFIG,
 ): ScoreboardState =>
   updatePlayer(state, playerId, (player) => ({
     ...player,
-    score: player.score + 1,
+    score: applyScoreDelta(player.score, 1, config),
   }));
 
 export const decrementPlayerScore = (
   state: ScoreboardState,
   playerId: ScoreboardPlayerId,
+  config = DEFAULT_SCOREBOARD_CONFIG,
 ): ScoreboardState =>
   updatePlayer(state, playerId, (player) => ({
     ...player,
-    score: Math.max(0, player.score - 1),
+    score: applyScoreDelta(player.score, -1, config),
   }));
 
 export const resetScores = (state: ScoreboardState): ScoreboardState => ({
@@ -54,3 +63,24 @@ export const resetScores = (state: ScoreboardState): ScoreboardState => ({
     score: 0,
   })) as ScoreboardState["players"],
 });
+
+export const applyScoreDelta = (
+  currentScore: number,
+  delta: number,
+  config: ScoreboardConfig,
+): number => {
+  const nextScore = currentScore + delta;
+  const withMinimum = config.allowNegativeScore
+    ? nextScore
+    : Math.max(config.minScore, nextScore);
+
+  if (delta > 0 && typeof config.maxScore === "number") {
+    if (currentScore >= config.maxScore) {
+      return currentScore;
+    }
+
+    return Math.min(config.maxScore, withMinimum);
+  }
+
+  return withMinimum;
+};
