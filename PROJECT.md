@@ -473,6 +473,8 @@ Evoluções técnicas:
 
 ## Roadmap
 
+Detalhamento por fase: [docs/roadmap/README.md](docs/roadmap/README.md).
+
 ### Fase 1: Placar Simples
 
 - Criar projeto React com TypeScript, Vite e TailwindCSS.
@@ -531,4 +533,3 @@ O projeto será considerado bem estruturado se:
 - A experiência mobile for confortável.
 - Novas regras de jogo puderem ser adicionadas sem reescrever componentes principais.
 - A documentação continuar alinhada ao comportamento real da aplicação.
-

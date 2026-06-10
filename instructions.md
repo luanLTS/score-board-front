@@ -21,6 +21,25 @@ Este documento define as regras que o Codex deve seguir ao implementar a aplica�
 - React hooks para estado local e composição.
 - Testes devem ser adicionados conforme o risco da feature crescer.
 
+## Worktrees E Dependencias
+
+Ao criar uma worktree para executar fases ou microfases em paralelo, nao rode `npm install` dentro da worktree por padrao. Reutilize as dependencias instaladas na raiz do projeto criando um link simbolico de `node_modules` dentro da worktree antes de executar comandos Node.
+
+Para worktrees criadas em `.worktrees/<nome-da-branch>`, use:
+
+```powershell
+New-Item -ItemType SymbolicLink -Path .worktrees/<nome-da-branch>/node_modules -Target ../../node_modules
+```
+
+Se a worktree estiver fora da raiz do projeto, use o caminho absoluto da `node_modules` da raiz como `-Target`.
+
+Regras:
+
+- A raiz do projeto deve ser a fonte unica de `node_modules`.
+- Instale ou atualize dependencias apenas na raiz do projeto quando `package.json` ou `package-lock.json` mudarem.
+- Cada nova worktree deve receber o link simbolico antes de rodar `npm.cmd test`, `npm.cmd run typecheck`, `npm.cmd run build` ou `npm.cmd run dev`.
+- Se o Windows bloquear links simbolicos por permissao, pare e avise antes de usar outra estrategia.
+
 ## Estrutura De Pastas
 
 A estrutura recomendada para a aplicação é:
@@ -421,4 +440,3 @@ Uma entrega só deve ser considerada pronta quando:
 - Mantém regras de pontuação testáveis.
 - Atualiza documentação quando altera comportamento relevante.
 - Não adiciona dependências sem justificativa.
-
