@@ -1,0 +1,1 @@
+export { getGameRules } from "./getGameRules";
