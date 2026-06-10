@@ -2,13 +2,15 @@
 
 ## Objetivo
 
-Separar a lógica do placar das regras de pontuação, permitindo configurar tipo de jogo, pontuação mínima, pontuação máxima e comportamentos iniciais para jogos como genérico, truco e FIFA.
+Separar a lógica do placar das regras de pontuação, permitindo configurar tipo de jogo, pontuação mínima, pontuação máxima opcional e permissão de pontuação negativa para jogos como genérico, truco e FIFA.
 
 ## Escopo Incluído
 
 - Tipo de jogo configurável.
 - Configuração genérica de pontuação.
+- Suporte a pontuação mínima.
 - Suporte a pontuação máxima opcional.
+- Suporte a `allowNegativeScore`.
 - Preparação de regras para `generic`, `truco` e `fifa`.
 - Validação de ações de pontuação por regra.
 
@@ -80,11 +82,13 @@ Separar a lógica do placar das regras de pontuação, permitindo configurar tip
 - Definir configuração inicial para truco.
 - Definir configuração inicial para FIFA.
 - Registrar todas as configurações em um mapa por `GameKind`.
+- Manter `fifa` sem `maxScore` por enquanto.
 
 **Critério de pronto:**
 
 - Cada jogo conhecido tem uma configuração explícita.
 - Valores pendentes continuam documentados em riscos e decisões, sem bloquear o contrato.
+- O limite máximo real do truco continua pendente se ainda depender de decisão de produto.
 
 **Paralelismo:** pode rodar em paralelo com a UI mockada de seleção de jogo.
 
@@ -307,6 +311,6 @@ Deve ser sequencial:
 
 ## Riscos E Decisões Pendentes
 
-- Definir a pontuação máxima real do truco nesta versão.
-- Definir se FIFA deve ter pontuação máxima ou permanecer sem limite.
+- Avaliar se a pontuação máxima real do truco deve ser fechada nesta versão.
+- FIFA permanece sem limite máximo por enquanto.
 - Decidir se a troca de tipo de jogo deve resetar o placar.
