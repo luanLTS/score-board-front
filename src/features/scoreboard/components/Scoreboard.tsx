@@ -1,24 +1,32 @@
-import { useGameRules } from "../hooks/useGameRules";
-import { useScoreboard } from "../hooks/useScoreboard";
+import { getGameRules } from "../rules";
+import { usePersistentScoreboard } from "../hooks/usePersistentScoreboard";
+import type { ScoreboardState } from "../types";
 
 import { GameKindSelect } from "./GameKindSelect";
 import { ScoreboardActions } from "./ScoreboardActions";
 import { ScorePanel } from "./ScorePanel";
 
-export function Scoreboard() {
-  const { config, gameKind, selectGameKind } = useGameRules();
+type ScoreboardProps = {
+  onFinishMatch?: (state: ScoreboardState) => void;
+};
+
+export function Scoreboard({ onFinishMatch = () => undefined }: ScoreboardProps) {
   const {
     addPoint,
     canAddPoint,
     canRemovePoint,
+    clearCurrentScoreboard,
+    gameKind,
     players,
     removePoint,
     renamePlayer,
     reset,
-  } = useScoreboard(config);
+    setGameKind,
+    state,
+  } = usePersistentScoreboard(undefined, getGameRules);
 
   return (
-    <section className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-5xl flex-col justify-center gap-6">
+    <section className="flex w-full flex-col justify-center gap-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
           <p className="text-sm font-medium uppercase text-teal-300">
@@ -28,7 +36,7 @@ export function Scoreboard() {
         </div>
         <div className="w-full sm:w-48">
           <GameKindSelect
-            onChange={selectGameKind}
+            onChange={setGameKind}
             selectedGameKind={gameKind}
           />
         </div>
@@ -55,7 +63,13 @@ export function Scoreboard() {
         ))}
       </div>
 
-      <ScoreboardActions onReset={reset} />
+      <ScoreboardActions
+        onClearCurrentScoreboard={clearCurrentScoreboard}
+        onFinishMatch={() => {
+          onFinishMatch(state);
+        }}
+        onReset={reset}
+      />
     </section>
   );
 }

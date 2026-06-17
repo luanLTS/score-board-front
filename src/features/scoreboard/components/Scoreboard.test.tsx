@@ -1,14 +1,18 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Scoreboard } from "./Scoreboard";
 
 describe("Scoreboard", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
   it("lets users edit names, score both players, block negative scores, and reset scores only", async () => {
     const user = userEvent.setup();
 
-    render(<Scoreboard />);
+    render(<Scoreboard onFinishMatch={vi.fn()} />);
 
     const playerOneName = screen.getByLabelText("Nome do participante 1");
     const playerTwoName = screen.getByLabelText("Nome do participante 2");
@@ -54,10 +58,44 @@ describe("Scoreboard", () => {
     ).toBeDisabled();
   });
 
+  it("lets users select a game kind and start a new current scoreboard", async () => {
+    const user = userEvent.setup();
+    const onFinishMatch = vi.fn();
+
+    render(<Scoreboard onFinishMatch={onFinishMatch} />);
+
+    await user.selectOptions(screen.getByLabelText("Tipo de jogo"), "truco");
+    await user.clear(screen.getByLabelText("Nome do participante 1"));
+    await user.type(screen.getByLabelText("Nome do participante 1"), "Ana");
+    await user.click(
+      screen.getByRole("button", { name: "Adicionar ponto para Ana" }),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Finalizar partida" }));
+
+    expect(onFinishMatch).toHaveBeenCalledWith({
+      gameKind: "truco",
+      players: [
+        { id: "player-1", name: "Ana", score: 1 },
+        { id: "player-2", name: "Jogador 2", score: 0 },
+      ],
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: "Iniciar nova partida" }),
+    );
+
+    expect(screen.getByDisplayValue("Jogador 1")).toBeInTheDocument();
+    expect(screen.getByLabelText("Pontuação de Jogador 1")).toHaveTextContent(
+      "0",
+    );
+    expect(screen.getByLabelText("Tipo de jogo")).toHaveValue("truco");
+  });
+
   it("uses participant fallback labels when a name is empty", async () => {
     const user = userEvent.setup();
 
-    render(<Scoreboard />);
+    render(<Scoreboard onFinishMatch={vi.fn()} />);
 
     await user.clear(screen.getByLabelText("Nome do participante 1"));
 

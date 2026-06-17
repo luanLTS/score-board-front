@@ -82,6 +82,7 @@ describe("score utilities", () => {
       allowNegativeScore: false,
     };
     const state: ScoreboardState = {
+      gameKind: "truco",
       players: [
         { id: "player-1", name: "Jogador 1", score: 15 },
         { id: "player-2", name: "Jogador 2", score: 0 },
@@ -117,6 +118,7 @@ describe("score utilities", () => {
       allowNegativeScore: false,
     };
     const state: ScoreboardState = {
+      gameKind: "truco",
       players: [
         { id: "player-1", name: "Jogador 1", score: 20 },
         { id: "player-2", name: "Jogador 2", score: 0 },

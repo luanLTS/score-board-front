@@ -16,5 +16,6 @@ export type ScoreboardPlayer = {
 };
 
 export type ScoreboardState = {
+  gameKind: GameKind;
   players: [ScoreboardPlayer, ScoreboardPlayer];
 };
