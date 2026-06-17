@@ -142,14 +142,14 @@ Responsável por:
 
 ### Game Rules
 
-Módulo futuro para regras específicas por jogo.
+Módulo de regras específicas por jogo, iniciado na Fase 2.
 
 Responsável por:
 
-- Definir pontuação mínima e máxima.
-- Definir incrementos permitidos.
-- Calcular vitória.
+- Definir pontuação mínima e pontuação máxima opcional.
+- Definir se pontuação negativa é permitida.
 - Validar ações de pontuação.
+- Evoluir futuramente para incrementos específicos e cálculo de vitória.
 
 ### History
 
@@ -236,7 +236,6 @@ Representa o estado atual do placar.
 ```ts
 export type ScoreboardState = {
   players: [ScoreboardPlayer, ScoreboardPlayer];
-  gameKind: GameKind;
 };
 ```
 
@@ -305,10 +304,17 @@ Regras iniciais:
 - Pontuação não deve ser menor que `0` por padrão.
 - Resetar placar deve zerar pontuações sem apagar nomes, salvo decisão explícita de UX.
 
-Regras futuras:
+Regras configuráveis:
 
 - Cada jogo pode ter uma configuração própria.
-- Um jogo pode definir pontuação máxima.
+- Os jogos conhecidos inicialmente são `generic`, `truco` e `fifa`.
+- Toda configuração define `minScore` e `allowNegativeScore`.
+- `maxScore` é opcional; quando ausente, o jogo não tem limite superior.
+- O modo genérico mantém pontuação mínima `0` e não permite negativos por padrão.
+- FIFA permanece sem limite máximo por enquanto.
+
+Regras futuras:
+
 - Uma partida pode ter status.
 - Uma partida finalizada deve preservar resultado.
 - Um torneio deve avançar vencedores com base no resultado da partida.
@@ -353,13 +359,14 @@ Fase 1:
 
 Fase 2:
 
-- Persistência local com `localStorage`.
-- Adaptador isolado para salvar, carregar e limpar.
+- Sem persistência obrigatória.
+- Regras configuráveis em memória para `generic`, `truco` e `fifa`.
 
 Fase 3:
 
 - Histórico local de partidas.
 - Separação entre placar atual e partidas finalizadas.
+- Persistência local do placar atual, se fizer sentido para a experiência.
 
 Fase 4:
 
@@ -488,9 +495,10 @@ Detalhamento por fase: [docs/roadmap/README.md](docs/roadmap/README.md).
 ### Fase 2: Regras Configuráveis
 
 - Adicionar configuração de tipo de jogo.
-- Criar regras genéricas de pontuação.
-- Suportar pontuação máxima.
-- Preparar regras de truco e FIFA.
+- Criar regras para `generic`, `truco` e `fifa`.
+- Suportar pontuação mínima e pontuação negativa configurável.
+- Suportar pontuação máxima opcional.
+- Manter FIFA sem limite máximo por enquanto.
 
 ### Fase 3: Persistência E Histórico
 

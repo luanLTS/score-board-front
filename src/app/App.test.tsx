@@ -42,7 +42,7 @@ describe("App phase 3 persistence and history", () => {
     await user.type(screen.getByLabelText("Nome do participante 1"), "Ana");
     await user.clear(screen.getByLabelText("Nome do participante 2"));
     await user.type(screen.getByLabelText("Nome do participante 2"), "Bruno");
-    await user.selectOptions(screen.getByLabelText("Tipo de partida"), "fifa");
+    await user.selectOptions(screen.getByLabelText("Tipo de jogo"), "fifa");
     await user.click(
       screen.getByRole("button", { name: "Adicionar ponto para Ana" }),
     );

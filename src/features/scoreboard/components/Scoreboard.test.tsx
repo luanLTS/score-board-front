@@ -64,10 +64,7 @@ describe("Scoreboard", () => {
 
     render(<Scoreboard onFinishMatch={onFinishMatch} />);
 
-    await user.selectOptions(
-      screen.getByLabelText("Tipo de partida"),
-      "truco",
-    );
+    await user.selectOptions(screen.getByLabelText("Tipo de jogo"), "truco");
     await user.clear(screen.getByLabelText("Nome do participante 1"));
     await user.type(screen.getByLabelText("Nome do participante 1"), "Ana");
     await user.click(
@@ -92,7 +89,7 @@ describe("Scoreboard", () => {
     expect(screen.getByLabelText("Pontuação de Jogador 1")).toHaveTextContent(
       "0",
     );
-    expect(screen.getByLabelText("Tipo de partida")).toHaveValue("truco");
+    expect(screen.getByLabelText("Tipo de jogo")).toHaveValue("truco");
   });
 
   it("uses participant fallback labels when a name is empty", async () => {
@@ -110,5 +107,32 @@ describe("Scoreboard", () => {
         name: "Adicionar ponto para Participante 1",
       }),
     ).toBeInTheDocument();
+  });
+
+  it("lets users select truco rules and disables scoring at the maximum", async () => {
+    const user = userEvent.setup();
+
+    render(<Scoreboard />);
+
+    await user.selectOptions(screen.getByLabelText("Tipo de jogo"), "truco");
+
+    const addPoint = screen.getByRole("button", {
+      name: "Adicionar ponto para Jogador 1",
+    });
+
+    for (let points = 0; points < 12; points += 1) {
+      await user.click(addPoint);
+    }
+
+    expect(screen.getByLabelText(/Pontuação de Jogador 1/)).toHaveTextContent(
+      "12",
+    );
+    expect(addPoint).toBeDisabled();
+
+    await user.click(addPoint);
+
+    expect(screen.getByLabelText(/Pontuação de Jogador 1/)).toHaveTextContent(
+      "12",
+    );
   });
 });

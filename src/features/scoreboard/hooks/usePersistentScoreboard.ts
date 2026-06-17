@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 
-import type { GameKind, ScoreboardPlayerId, ScoreboardState } from "../types";
+import type {
+  GameKind,
+  ScoreboardConfig,
+  ScoreboardPlayerId,
+  ScoreboardState,
+} from "../types";
 import { createScoreboardStorage } from "../persistence/scoreboardStorage";
 import type { ScoreboardStorage } from "../persistence/scoreboardStorage";
 import {
+  applyScoreDelta,
   createInitialScoreboardState,
   decrementPlayerScore,
   incrementPlayerScore,
@@ -13,9 +19,15 @@ import {
 } from "../utils/score";
 
 const defaultScoreboardStorage = createScoreboardStorage();
+const defaultGetConfig = (gameKind: GameKind): ScoreboardConfig => ({
+  gameKind,
+  minScore: 0,
+  allowNegativeScore: false,
+});
 
 export const usePersistentScoreboard = (
   storage: ScoreboardStorage = defaultScoreboardStorage,
+  getConfig: (gameKind: GameKind) => ScoreboardConfig = defaultGetConfig,
 ) => {
   const skipNextSave = useRef(false);
   const [state, setState] = useState<ScoreboardState>(
@@ -31,15 +43,33 @@ export const usePersistentScoreboard = (
     storage.save(state);
   }, [storage, state]);
 
+  const config = getConfig(state.gameKind);
+  const getPlayerScore = (playerId: ScoreboardPlayerId) =>
+    state.players.find((player) => player.id === playerId)?.score ?? 0;
+
   return {
     gameKind: state.gameKind,
     players: state.players,
     state,
     addPoint: (playerId: ScoreboardPlayerId) => {
-      setState((currentState) => incrementPlayerScore(currentState, playerId));
+      setState((currentState) =>
+        incrementPlayerScore(currentState, playerId, config),
+      );
     },
     removePoint: (playerId: ScoreboardPlayerId) => {
-      setState((currentState) => decrementPlayerScore(currentState, playerId));
+      setState((currentState) =>
+        decrementPlayerScore(currentState, playerId, config),
+      );
+    },
+    canAddPoint: (playerId: ScoreboardPlayerId) => {
+      const score = getPlayerScore(playerId);
+
+      return applyScoreDelta(score, 1, config) !== score;
+    },
+    canRemovePoint: (playerId: ScoreboardPlayerId) => {
+      const score = getPlayerScore(playerId);
+
+      return applyScoreDelta(score, -1, config) !== score;
     },
     reset: () => {
       setState((currentState) => resetScores(currentState));
