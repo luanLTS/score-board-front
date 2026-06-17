@@ -101,6 +101,19 @@ Componentes -> hooks da feature -> regras puras -> estado/persistência
 
 Evite acoplar a UI diretamente a regras de jogo, localStorage, APIs ou formatos de torneio.
 
+## Preservação De Requisitos Existentes
+
+Funcionalidades já entregues devem ser tratadas como contrato do produto. Ao implementar uma nova fase ou refatorar uma área existente, o comportamento anterior deve continuar disponível, a menos que a mudança tenha sido explicitamente pedida e documentada.
+
+Regras:
+
+- Não remover, esconder ou desconectar uma funcionalidade já implementada ao adicionar outra.
+- Antes de substituir um componente, hook ou fluxo, mapear quais requisitos atuais ele atende e garantir que a nova composição preserve esses requisitos.
+- Aplicar o princípio Open/Closed: preferir estender contratos e composições existentes em vez de reescrever caminhos inteiros que apagam capacidades anteriores.
+- Se uma mudança realmente precisar alterar um comportamento existente, registrar a decisão no plano ou na documentação da fase.
+- Todo requisito preservado que estiver em risco durante a mudança deve ter teste de regressão ou teste de integração cobrindo o fluxo.
+- Em code review, conferir explicitamente se a nova fase manteve os critérios de aceite das fases anteriores que ainda se aplicam.
+
 ## Convenções De Código
 
 - Usar nomes claros e específicos.
