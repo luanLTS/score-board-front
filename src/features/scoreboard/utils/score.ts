@@ -10,12 +10,14 @@ const updatePlayer = (
   playerId: ScoreboardPlayerId,
   update: (player: ScoreboardPlayer) => ScoreboardPlayer,
 ): ScoreboardState => ({
+  ...state,
   players: state.players.map((player) =>
     player.id === playerId ? update(player) : player,
   ) as ScoreboardState["players"],
 });
 
 export const createInitialScoreboardState = (): ScoreboardState => ({
+  gameKind: INITIAL_SCOREBOARD_STATE.gameKind,
   players: INITIAL_SCOREBOARD_STATE.players.map((player) => ({ ...player })) as
     ScoreboardState["players"],
 });
@@ -29,6 +31,14 @@ export const updatePlayerName = (
     ...player,
     name,
   }));
+
+export const updateGameKind = (
+  state: ScoreboardState,
+  gameKind: ScoreboardState["gameKind"],
+): ScoreboardState => ({
+  ...state,
+  gameKind,
+});
 
 export const incrementPlayerScore = (
   state: ScoreboardState,
@@ -49,6 +59,7 @@ export const decrementPlayerScore = (
   }));
 
 export const resetScores = (state: ScoreboardState): ScoreboardState => ({
+  ...state,
   players: state.players.map((player) => ({
     ...player,
     score: 0,
