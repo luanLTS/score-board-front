@@ -43,6 +43,7 @@ describe("App phase 3 persistence and history", () => {
     await user.clear(screen.getByLabelText("Nome do participante 2"));
     await user.type(screen.getByLabelText("Nome do participante 2"), "Bruno");
     await user.selectOptions(screen.getByLabelText("Tipo de jogo"), "fifa");
+    await user.click(screen.getByRole("button", { name: "Iniciar partida" }));
     await user.click(
       screen.getByRole("button", { name: "Adicionar ponto para Ana" }),
     );
@@ -56,10 +57,6 @@ describe("App phase 3 persistence and history", () => {
     await user.click(
       screen.getByRole("button", { name: "Finalizar partida" }),
     );
-    await user.click(
-      screen.getByRole("button", { name: "Finalizar partida" }),
-    );
-
     expect(screen.getByRole("button", { name: /Ana 1 x 2 Bruno/i }))
       .toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Ana x Bruno" }))
@@ -82,7 +79,7 @@ describe("App phase 3 persistence and history", () => {
     ).toHaveLength(1);
 
     await user.click(
-      screen.getByRole("button", { name: "Iniciar nova partida" }),
+      screen.getByRole("button", { name: "Novo confronto" }),
     );
 
     expect(screen.getByDisplayValue("Jogador 1")).toBeInTheDocument();

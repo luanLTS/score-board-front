@@ -34,6 +34,7 @@ describe("createFinishedMatch", () => {
       startedAt,
       finishedAt: now,
       winnerId: "player-1",
+      result: { type: "winner", winnerId: "player-1" },
     });
 
     expect(match.participants[0]).not.toBe(scoreboardState.players[0]);
@@ -57,5 +58,19 @@ describe("createFinishedMatch", () => {
     expect(match.startedAt).toBeInstanceOf(Date);
     expect(match.finishedAt).toBeInstanceOf(Date);
     expect(match.winnerId).toBeUndefined();
+    expect(match.result).toEqual({ type: "draw" });
+  });
+
+  it("calculates the winner from the scoreboard when not explicitly provided", () => {
+    const match = createFinishedMatch({
+      gameKind: "fifa",
+      players: [
+        { id: "player-1", name: "Ana", score: 2 },
+        { id: "player-2", name: "Bia", score: 4 },
+      ],
+    });
+
+    expect(match.winnerId).toBe("player-2");
+    expect(match.result).toEqual({ type: "winner", winnerId: "player-2" });
   });
 });

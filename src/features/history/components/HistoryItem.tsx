@@ -1,12 +1,12 @@
-import type { Match } from "../../matches/types";
+import type { FinishedMatch } from "../../matches/types";
 
 type HistoryItemProps = {
-  match: Match;
+  match: FinishedMatch;
   isSelected: boolean;
   onSelect: (matchId: string) => void;
 };
 
-const gameKindLabels: Record<Match["gameKind"], string> = {
+const gameKindLabels: Record<FinishedMatch["gameKind"], string> = {
   generic: "Generico",
   truco: "Truco",
   fifa: "Fifa",

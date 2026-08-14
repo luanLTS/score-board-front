@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import type { Match } from "../../matches/types";
+import type { FinishedMatch } from "../../matches/types";
 
 import { HistoryList } from "./HistoryList";
 
@@ -29,7 +29,7 @@ const matches = [
       { id: "caio", name: "Caio", score: 2 },
     ],
   },
-] as Match[];
+] as FinishedMatch[];
 
 describe("HistoryList", () => {
   it("renders an empty state when there are no matches", () => {

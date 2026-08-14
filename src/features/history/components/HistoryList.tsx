@@ -1,9 +1,9 @@
-import type { Match } from "../../matches/types";
+import type { FinishedMatch } from "../../matches/types";
 
 import { HistoryItem } from "./HistoryItem";
 
 type HistoryListProps = {
-  matches: Match[];
+  matches: FinishedMatch[];
   selectedMatchId?: string;
   onSelectMatch: (matchId: string) => void;
 };

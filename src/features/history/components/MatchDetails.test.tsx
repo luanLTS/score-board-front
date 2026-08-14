@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import type { Match } from "../../matches/types";
+import type { FinishedMatch } from "../../matches/types";
 
 import { MatchDetails } from "./MatchDetails";
 
@@ -15,7 +15,9 @@ const match = {
     { id: "ana", name: "Ana", score: 12 },
     { id: "bruno", name: "Bruno", score: 8 },
   ],
-} as Match;
+  winnerId: "ana",
+  result: { type: "winner", winnerId: "ana" },
+} as FinishedMatch;
 
 describe("MatchDetails", () => {
   it("renders an empty state when no match is selected", () => {
@@ -32,7 +34,26 @@ describe("MatchDetails", () => {
     expect(screen.getByLabelText("Placar final")).toHaveTextContent("12 x 8");
     expect(screen.getByText("Truco")).toBeInTheDocument();
     expect(screen.getByText("Finalizada")).toBeInTheDocument();
+    expect(screen.getByText("Vencedor: Ana")).toBeInTheDocument();
     expect(screen.getByText("15/06/2026 17:00")).toBeInTheDocument();
     expect(screen.getByText("15/06/2026 17:35")).toBeInTheDocument();
+  });
+
+  it("renders an explicit draw result", () => {
+    render(
+      <MatchDetails
+        match={{
+          ...match,
+          participants: [
+            { id: "ana", name: "Ana", score: 3 },
+            { id: "bruno", name: "Bruno", score: 3 },
+          ],
+          winnerId: undefined,
+          result: { type: "draw" },
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Empate")).toBeInTheDocument();
   });
 });
