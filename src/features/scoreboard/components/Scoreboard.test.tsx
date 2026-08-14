@@ -135,4 +135,72 @@ describe("Scoreboard", () => {
       "12",
     );
   });
+
+  it("delegates changes when used as a controlled scoreboard", async () => {
+    const user = userEvent.setup();
+    const onScoreChange = vi.fn();
+    const onRenamePlayer = vi.fn();
+    const onGameKindChange = vi.fn();
+    const players = [
+      { id: "player-1" as const, name: "Ana", score: 4 },
+      { id: "player-2" as const, name: "Bia", score: 2 },
+    ] as const;
+
+    render(
+      <Scoreboard
+        gameKind="truco"
+        onGameKindChange={onGameKindChange}
+        onRenamePlayer={onRenamePlayer}
+        onScoreChange={onScoreChange}
+        players={[...players]}
+        showActions={false}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Adicionar ponto para Ana" }));
+    await user.click(screen.getByRole("button", { name: "Remover ponto de Bia" }));
+    await user.type(screen.getByDisplayValue("Ana"), " M");
+    await user.selectOptions(screen.getByLabelText("Tipo de jogo"), "fifa");
+
+    expect(onScoreChange).toHaveBeenNthCalledWith(1, "player-1", 5);
+    expect(onScoreChange).toHaveBeenNthCalledWith(2, "player-2", 1);
+    expect(onRenamePlayer).toHaveBeenCalled();
+    expect(onGameKindChange).toHaveBeenCalledWith("fifa");
+    expect(screen.queryByRole("button", { name: "Finalizar partida" })).not.toBeInTheDocument();
+  });
+
+  it("blocks every editing control and action when disabled", async () => {
+    const user = userEvent.setup();
+    const onScoreChange = vi.fn();
+    const onRenamePlayer = vi.fn();
+    const onGameKindChange = vi.fn();
+    const onFinishMatch = vi.fn();
+
+    render(
+      <Scoreboard
+        disabled
+        gameKind="generic"
+        onFinishMatch={onFinishMatch}
+        onGameKindChange={onGameKindChange}
+        onRenamePlayer={onRenamePlayer}
+        onScoreChange={onScoreChange}
+        players={[
+          { id: "player-1", name: "Ana", score: 1 },
+          { id: "player-2", name: "Bia", score: 0 },
+        ]}
+      />,
+    );
+
+    expect(screen.getByDisplayValue("Ana")).toBeDisabled();
+    expect(screen.getByLabelText("Tipo de jogo")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Adicionar ponto para Ana" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Remover ponto de Ana" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Finalizar partida" })).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "Finalizar partida" }));
+    expect(onScoreChange).not.toHaveBeenCalled();
+    expect(onRenamePlayer).not.toHaveBeenCalled();
+    expect(onGameKindChange).not.toHaveBeenCalled();
+    expect(onFinishMatch).not.toHaveBeenCalled();
+  });
 });

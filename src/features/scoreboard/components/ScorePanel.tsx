@@ -12,6 +12,7 @@ type ScorePanelProps = {
   onAddPoint: () => void;
   onRemovePoint: () => void;
   onRename: (name: string) => void;
+  disabled?: boolean;
 };
 
 export function ScorePanel({
@@ -22,12 +23,14 @@ export function ScorePanel({
   onAddPoint,
   onRemovePoint,
   onRename,
+  disabled = false,
 }: ScorePanelProps) {
   const displayName = player.name.trim() || `Participante ${index + 1}`;
 
   return (
     <article className="rounded-lg border border-zinc-800 bg-zinc-900 p-5 shadow-xl shadow-black/20">
       <PlayerNameInput
+        disabled={disabled}
         id={`${player.id}-name`}
         label={`Nome do participante ${index + 1}`}
         onChange={onRename}
@@ -42,8 +45,8 @@ export function ScorePanel({
       </div>
 
       <ScoreControls
-        canAddPoint={canAddPoint}
-        canRemovePoint={canRemovePoint}
+        canAddPoint={!disabled && canAddPoint}
+        canRemovePoint={!disabled && canRemovePoint}
         onAddPoint={onAddPoint}
         onRemovePoint={onRemovePoint}
         playerName={displayName}

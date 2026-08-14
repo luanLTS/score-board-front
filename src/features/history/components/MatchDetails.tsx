@@ -1,10 +1,10 @@
-import type { Match } from "../../matches/types";
+import type { FinishedMatch } from "../../matches/types";
 
 type MatchDetailsProps = {
-  match: Match | null;
+  match: FinishedMatch | null;
 };
 
-const gameKindLabels: Record<Match["gameKind"], string> = {
+const gameKindLabels: Record<FinishedMatch["gameKind"], string> = {
   generic: "Generico",
   truco: "Truco",
   fifa: "Fifa",
@@ -34,6 +34,20 @@ export function MatchDetails({ match }: MatchDetailsProps) {
   }
 
   const [home, away] = match.participants;
+  const resultWinnerId =
+    match.result?.type === "winner" ? match.result.winnerId : undefined;
+  const winner =
+    resultWinnerId
+      ? match.participants.find(
+          (participant) => participant.id === resultWinnerId,
+        )
+      : undefined;
+  const resultLabel =
+    match.result?.type === "draw"
+      ? "Empate"
+      : winner
+        ? `Vencedor: ${winner.name}`
+        : undefined;
 
   return (
     <section
@@ -55,6 +69,10 @@ export function MatchDetails({ match }: MatchDetailsProps) {
       >
         {home.score} x {away.score}
       </output>
+
+      {resultLabel ? (
+        <p className="font-semibold text-teal-300">{resultLabel}</p>
+      ) : null}
 
       <dl className="grid gap-3 text-sm text-zinc-300 sm:grid-cols-3">
         <div>
