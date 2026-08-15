@@ -21,6 +21,18 @@ describe("scoreboardStorage", () => {
     expect(parseScoreboardState(validState)).toEqual(validState);
   });
 
+  it("accepts unique dynamic participant ids used by tournament matches", () => {
+    const tournamentState: ScoreboardState = {
+      gameKind: "generic",
+      players: [
+        { id: "participant-uuid-a", name: "Ana", score: 3 },
+        { id: "participant-uuid-b", name: "Bia", score: 1 },
+      ],
+    };
+
+    expect(parseScoreboardState(tournamentState)).toEqual(tournamentState);
+  });
+
   it("returns null for invalid persisted scoreboard state", () => {
     expect(parseScoreboardState(null)).toBeNull();
     expect(parseScoreboardState({ players: [] })).toBeNull();
@@ -29,6 +41,14 @@ describe("scoreboardStorage", () => {
         players: [
           { id: "player-1", name: "Ana", score: "2" },
           { id: "player-2", name: "Bruno", score: 1 },
+        ],
+      }),
+    ).toBeNull();
+    expect(
+      parseScoreboardState({
+        players: [
+          { id: "same-id", name: "Ana", score: 1 },
+          { id: "same-id", name: "Bruno", score: 1 },
         ],
       }),
     ).toBeNull();

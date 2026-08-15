@@ -14,6 +14,8 @@ type CurrentMatchViewProps = {
   match: Match;
   onStart: () => void;
   onUpdateScores: (scores: [number, number]) => void;
+  onRenameParticipant?: (participantId: string, name: string) => void;
+  onGameKindChange?: (gameKind: GameKind) => void;
   onFinish: () => void;
   onNewMatch: () => void;
   ScoreboardComponent?: ComponentType<ControlledMatchScoreboardProps>;
@@ -25,6 +27,9 @@ export type ControlledMatchScoreboardProps = {
   disabled: boolean;
   onScoresChange: (scores: [number, number]) => void;
   onFinish: (scores: [number, number]) => void;
+  onRenameParticipant: (participantId: string, name: string) => void;
+  onGameKindChange: (gameKind: GameKind) => void;
+  onNewMatch: () => void;
 };
 
 const LegacyScoreboardAdapter = ({
@@ -33,6 +38,9 @@ const LegacyScoreboardAdapter = ({
   disabled,
   onScoresChange,
   onFinish,
+  onGameKindChange,
+  onNewMatch,
+  onRenameParticipant,
 }: ControlledMatchScoreboardProps) => {
   const players = participants as [ScoreboardPlayer, ScoreboardPlayer];
   const handleScoreChange = (playerId: ScoreboardPlayerId, score: number) => {
@@ -46,6 +54,10 @@ const LegacyScoreboardAdapter = ({
       disabled={disabled}
       gameKind={gameKind}
       onFinishMatch={(state) => onFinish([state.players[0].score, state.players[1].score])}
+      onGameKindChange={onGameKindChange}
+      onNewMatch={onNewMatch}
+      onRenamePlayer={onRenameParticipant}
+      onReset={() => onScoresChange([0, 0])}
       onScoreChange={handleScoreChange}
       players={players}
     />
@@ -64,6 +76,8 @@ export function CurrentMatchView({
   onUpdateScores,
   onFinish,
   onNewMatch,
+  onRenameParticipant = () => undefined,
+  onGameKindChange = () => undefined,
   ScoreboardComponent = LegacyScoreboardAdapter,
 }: CurrentMatchViewProps) {
   if (match.status === "finished") {
@@ -99,6 +113,9 @@ export function CurrentMatchView({
           disabled={false}
           gameKind={match.gameKind}
           onFinish={handleFinish}
+          onGameKindChange={onGameKindChange}
+          onNewMatch={onNewMatch}
+          onRenameParticipant={onRenameParticipant}
           onScoresChange={onUpdateScores}
           participants={match.participants}
         />

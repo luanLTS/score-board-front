@@ -35,7 +35,7 @@ export function MatchDetails({ match }: MatchDetailsProps) {
 
   const [home, away] = match.participants;
   const resultWinnerId =
-    match.result?.type === "winner" ? match.result.winnerId : undefined;
+    match.result?.type === "winner" ? match.result.winnerId : match.winnerId;
   const winner =
     resultWinnerId
       ? match.participants.find(

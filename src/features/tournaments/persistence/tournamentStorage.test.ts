@@ -28,6 +28,19 @@ describe("tournamentStorage", () => {
     expect(parseTournament({ ...tournament, bracket: { rounds: [{ number: 1, matches: [{ status: "ready" }] }] } })).toBeNull();
   });
 
+  it("rejects inconsistent bracket lifecycle and references", () => {
+    expect(parseTournament({ ...tournament, championId: "unknown" })).toBeNull();
+    expect(parseTournament({ ...tournament, status: "finished" })).toBeNull();
+    expect(parseTournament({
+      ...tournament,
+      bracket: { rounds: [{ number: 1, matches: [{ ...tournament.bracket!.rounds[0].matches[0], status: "finished", winnerId: "unknown" }] }] },
+    })).toBeNull();
+    expect(parseTournament({
+      ...tournament,
+      bracket: { rounds: [{ number: 1, matches: [{ ...tournament.bracket!.rounds[0].matches[0], nextMatchId: "missing", nextParticipantSlot: 0 }] }] },
+    })).toBeNull();
+  });
+
   it("loads safely and delegates save and clear", () => {
     const adapter: StorageAdapter<unknown> = { load: vi.fn(() => tournament), save: vi.fn(), clear: vi.fn() };
     const storage = createTournamentStorage(adapter);

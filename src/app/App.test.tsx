@@ -90,7 +90,7 @@ describe("App phase 3 persistence and history", () => {
 
   it("creates an elimination tournament and opens a bracket match in the scoreboard", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    const { unmount } = render(<App />);
 
     await user.click(screen.getByRole("button", { name: "Torneio" }));
     await user.type(screen.getByLabelText("Nome do torneio"), "Copa local");
@@ -106,9 +106,13 @@ describe("App phase 3 persistence and history", () => {
     expect(screen.getByDisplayValue("Ana")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Bia")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Adicionar ponto para Ana" }));
+    unmount();
+    render(<App />);
+    expect(screen.getByLabelText(/Pontua.* de Ana/)).toHaveTextContent("1");
     await user.click(screen.getByRole("button", { name: "Finalizar partida" }));
 
-    expect(await screen.findByText(/Campeão:/)).toHaveTextContent("Ana");
+    await user.click(screen.getByRole("button", { name: "Torneio" }));
+    expect(await screen.findByText(/Campe/)).toHaveTextContent("Ana");
     expect(screen.getByText("Confronto finalizado")).toBeInTheDocument();
   });
 });
