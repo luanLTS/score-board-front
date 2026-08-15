@@ -115,4 +115,32 @@ describe("App phase 3 persistence and history", () => {
     expect(await screen.findByText(/Campe/)).toHaveTextContent("Ana");
     expect(screen.getByText("Confronto finalizado")).toBeInTheDocument();
   });
+
+  it("shows ranking from real history in its own navigation section", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem(
+      HISTORY_STORAGE_KEYS.finishedMatchesV1,
+      JSON.stringify([{
+        id: "finished-1",
+        gameKind: "generic",
+        status: "finished",
+        startedAt: "2026-08-14T20:00:00.000Z",
+        finishedAt: "2026-08-14T20:10:00.000Z",
+        participants: [
+          { id: "ana", name: "Ana", score: 3 },
+          { id: "bia", name: "Bia", score: 1 },
+        ],
+        winnerId: "ana",
+        result: { type: "winner", winnerId: "ana" },
+      }]),
+    );
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Ranking" }));
+
+    expect(screen.getByRole("heading", { name: "Ranking" })).toBeVisible();
+    expect(screen.getAllByText("Ana").length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("listitem")[0]).toHaveTextContent("3 pts");
+    expect(screen.queryByRole("button", { name: "Iniciar partida" })).not.toBeInTheDocument();
+  });
 });

@@ -6,6 +6,8 @@ import type {
 } from "../types";
 import { validateTournamentParticipants } from "./participants";
 
+export type RandomNumberGenerator = () => number;
+
 const nextPowerOfTwo = (value: number): number => 2 ** Math.ceil(Math.log2(value));
 
 const createMatchId = (round: number, position: number): string =>
@@ -28,6 +30,20 @@ const getInitialSlots = (
 
 const getStatus = (participants: BracketMatch["participants"]): BracketMatch["status"] =>
   participants[0] && participants[1] ? "ready" : "pending";
+
+export const shuffleParticipants = (
+  participants: readonly TournamentParticipant[],
+  random: RandomNumberGenerator = Math.random,
+): TournamentParticipant[] => {
+  const shuffled = [...participants];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+
+  return shuffled;
+};
 
 const createRounds = (
   participants: readonly TournamentParticipant[],
@@ -83,13 +99,14 @@ const resolveByes = (bracket: TournamentBracket): TournamentBracket => {
 
 export function generateSingleEliminationBracket(
   participants: readonly TournamentParticipant[],
+  random: RandomNumberGenerator = Math.random,
 ): TournamentBracket {
   const validation = validateTournamentParticipants(participants);
   if (!validation.valid) {
     throw new Error(validation.message);
   }
 
-  return resolveByes({ rounds: createRounds(participants) });
+  return resolveByes({ rounds: createRounds(shuffleParticipants(participants, random)) });
 }
 
 export function advanceBracketWinner(

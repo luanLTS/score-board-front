@@ -2,14 +2,13 @@
 
 ## Objetivo
 
-Evoluir o produto além do fluxo principal, adicionando recursos de acompanhamento, apresentação, compartilhamento e uso recorrente.
+Evoluir o produto além do fluxo principal, adicionando recursos de acompanhamento local, compartilhamento e uso recorrente.
 
 ## Escopo Incluído
 
 - Ranking.
 - Estatísticas.
 - Compartilhamento de resultado.
-- Modo apresentação.
 - PWA.
 
 ## Fora De Escopo
@@ -19,6 +18,7 @@ Evoluir o produto além do fluxo principal, adicionando recursos de acompanhamen
 - Monetização.
 - Perfis públicos.
 - Administração avançada.
+- Acompanhamento do placar em TV, projetor ou outro dispositivo, pois depende de backend e sincronização em tempo real.
 
 ## Dependências
 
@@ -31,14 +31,31 @@ Evoluir o produto além do fluxo principal, adicionando recursos de acompanhamen
 - Ranking local.
 - Estatísticas por participante.
 - Ação de compartilhamento.
-- Layout de apresentação para tela grande.
 - Configuração inicial de PWA.
+
+## Regras Iniciais De Ranking E Estatísticas
+
+- A identidade local de um participante é seu nome normalizado com `trim` e comparação sem diferenciar maiúsculas de minúsculas.
+- O nome exibido preserva uma forma legível encontrada no histórico, enquanto a chave normalizada é usada para agrupar partidas.
+- O ranking concede 3 pontos por vitória, 1 ponto por empate e 0 ponto por derrota.
+- A ordenação usa, nesta ordem: pontos do ranking, número de vitórias, saldo de pontos e nome.
+- O desempate por nome é crescente e sem diferenciar maiúsculas de minúsculas.
+- As estatísticas por participante incluem jogos, vitórias, empates, derrotas, pontos pró, pontos contra, saldo de pontos e aproveitamento.
+- O aproveitamento é calculado por `pontos do ranking / (jogos * 3) * 100`; sem jogos, é `0`.
+
+## Escopo PWA Desta Fase
+
+- A PWA inclui instalação e funcionamento offline do app shell e dos assets essenciais por service worker.
+- Navegações da SPA usam o `index.html` em cache como fallback offline; assets locais visitados são armazenados sob demanda.
+- O cache do app shell é versionado e versões antigas são removidas na ativação do novo service worker.
+- Dados locais já persistidos continuam disponíveis conforme os mecanismos existentes do navegador.
+- Sincronização entre dispositivos, backend, login, filas de escrita remota e resolução de conflitos permanecem fora de escopo.
 
 ## Tarefas Pequenas Detalhadas
 
 ### 1. Definir métricas iniciais de ranking e estatísticas
 
-**Objetivo:** decidir quais informações serão calculadas a partir do histórico.
+**Objetivo:** implementar as métricas definidas nesta fase a partir do histórico.
 
 **Arquivos previstos:**
 
@@ -53,15 +70,16 @@ Evoluir o produto além do fluxo principal, adicionando recursos de acompanhamen
 
 **Passos:**
 
-- Definir métrica de ranking inicial.
-- Definir estatísticas por participante.
-- Decidir se participante será identificado por nome textual ou entidade.
+- Usar nome normalizado (`trim` e case-insensitive) como identidade local do participante.
+- Usar 3 pontos por vitória, 1 por empate e 0 por derrota.
+- Aplicar desempates por vitórias, saldo de pontos e nome.
+- Calcular jogos, vitórias, empates, derrotas, pontos pró/contra, saldo e aproveitamento.
 
 **Critério de pronto:**
 
 - Ranking e estatísticas têm regras explícitas antes da implementação.
 
-**Paralelismo:** bloqueia cálculos reais, mas não bloqueia PWA ou modo apresentação.
+**Paralelismo:** bloqueia cálculos reais, mas não bloqueia compartilhamento ou PWA.
 
 ### 2. Criar funções de cálculo de ranking
 
@@ -194,7 +212,7 @@ Evoluir o produto além do fluxo principal, adicionando recursos de acompanhamen
 
 - Texto de compartilhamento é previsível e independente da UI.
 
-**Paralelismo:** pode rodar em paralelo com ranking, modo apresentação e PWA.
+**Paralelismo:** pode rodar em paralelo com ranking e PWA.
 
 ### 8. Integrar Web Share API com fallback
 
@@ -220,52 +238,7 @@ Evoluir o produto além do fluxo principal, adicionando recursos de acompanhamen
 
 **Paralelismo:** sequencial após formato textual.
 
-### 9. Criar modo apresentação
-
-**Objetivo:** oferecer layout ampliado para tela grande, TV ou projetor.
-
-**Arquivos previstos:**
-
-- `src/features/presentation/components/PresentationScoreboard.tsx`
-
-**Depende de:** placar funcional da Fase 1 e partida atual da Fase 4.
-
-**Passos:**
-
-- Criar visual de placar ampliado.
-- Priorizar nomes e pontuação.
-- Reduzir controles ou deixá-los fora do modo apresentação.
-
-**Critério de pronto:**
-
-- Placar fica legível em tela grande.
-
-**Paralelismo:** pode rodar em paralelo com stats, sharing e PWA.
-
-### 10. Adicionar acesso ao modo apresentação
-
-**Objetivo:** permitir alternar entre uso normal e apresentação.
-
-**Arquivos previstos:**
-
-- `src/app/App.tsx`
-- `src/features/presentation/components/PresentationToggle.tsx`
-
-**Depende de:** tarefa 9.
-
-**Passos:**
-
-- Criar alternância ou rota simples para apresentação.
-- Preservar o mesmo estado de placar ou partida.
-- Permitir sair do modo apresentação.
-
-**Critério de pronto:**
-
-- Usuário consegue entrar e sair do modo apresentação sem perder estado.
-
-**Paralelismo:** sequencial após modo apresentação.
-
-### 11. Configurar manifesto PWA
+### 9. Configurar manifesto PWA
 
 **Objetivo:** preparar instalação básica da aplicação.
 
@@ -286,9 +259,9 @@ Evoluir o produto além do fluxo principal, adicionando recursos de acompanhamen
 
 - Aplicação possui manifesto válido.
 
-**Paralelismo:** pode rodar em paralelo com stats, sharing e apresentação.
+**Paralelismo:** pode rodar em paralelo com stats e sharing.
 
-### 12. Configurar ícones e metadados de instalação
+### 10. Configurar ícones e metadados de instalação
 
 **Objetivo:** completar os recursos visuais mínimos do PWA.
 
@@ -297,7 +270,7 @@ Evoluir o produto além do fluxo principal, adicionando recursos de acompanhamen
 - `public/icons/...`
 - `index.html`
 
-**Depende de:** tarefa 11.
+**Depende de:** tarefa 9.
 
 **Passos:**
 
@@ -311,45 +284,44 @@ Evoluir o produto além do fluxo principal, adicionando recursos de acompanhamen
 
 **Paralelismo:** sequencial após manifesto.
 
-### 13. Avaliar estratégia offline mínima
+### 11. Configurar estratégia offline mínima
 
-**Objetivo:** decidir se a fase inclui suporte offline além do cache padrão do navegador.
+**Objetivo:** disponibilizar o app shell e os assets essenciais offline.
 
 **Arquivos previstos:**
 
 - `docs/roadmap/fase-06-experiencia-avancada.md`
 - Arquivos de configuração PWA, se a decisão incluir service worker.
 
-**Depende de:** tarefas 11 e 12.
+**Depende de:** tarefas 9 e 10.
 
 **Passos:**
 
-- Definir se haverá service worker nesta fase.
-- Se houver, limitar escopo a shell estático e assets essenciais.
-- Se não houver, documentar que PWA inicial cobre instalação, não offline completo.
+- Configurar service worker limitado ao app shell e aos assets essenciais.
+- Validar abertura offline após ao menos um carregamento online.
+- Não implementar sincronização, backend ou resolução de conflitos nesta fase.
 
 **Critério de pronto:**
 
-- Escopo offline está decidido e documentado.
+- App shell e assets essenciais ficam disponíveis offline, com limites documentados.
 
 **Paralelismo:** pode ser decidido enquanto o manifesto é configurado.
 
-### 14. Integrar recursos avançados na experiência principal
+### 12. Integrar recursos avançados na experiência principal
 
-**Objetivo:** organizar ranking, estatísticas, compartilhamento, apresentação e PWA sem poluir o fluxo principal.
+**Objetivo:** organizar ranking, estatísticas, compartilhamento e PWA sem poluir o fluxo principal.
 
 **Arquivos previstos:**
 
 - `src/app/App.tsx`
-- Componentes das features `stats`, `sharing` e `presentation`.
+- Componentes das features `stats` e `sharing`.
 
-**Depende de:** tarefas 6, 8, 10, 11, 12 e 13.
+**Depende de:** tarefas 6, 8, 9, 10 e 11.
 
 **Passos:**
 
 - Posicionar ranking e estatísticas perto do histórico.
 - Colocar compartilhamento no contexto de resultado finalizado.
-- Manter modo apresentação acessível sem disputar com ações principais.
 
 **Critério de pronto:**
 
@@ -357,7 +329,7 @@ Evoluir o produto além do fluxo principal, adicionando recursos de acompanhamen
 
 **Paralelismo:** sequencial após recursos principais.
 
-### 15. Verificar a fase
+### 13. Verificar a fase
 
 **Objetivo:** confirmar que a Fase 6 está pronta.
 
@@ -371,7 +343,7 @@ Evoluir o produto além do fluxo principal, adicionando recursos de acompanhamen
 
 - Rodar `npm run typecheck`.
 - Rodar `npm run build`.
-- Conferir manualmente ranking, estatísticas, compartilhamento, apresentação e manifesto PWA.
+- Conferir manualmente ranking, estatísticas, compartilhamento e manifesto PWA.
 
 **Critério de pronto:**
 
@@ -390,30 +362,35 @@ Pode ser paralelo depois da tarefa 1:
 - Tarefa 4: UI de ranking com dados mockados.
 - Tarefa 5: UI de estatísticas com dados mockados.
 - Tarefa 7: formato de compartilhamento.
-- Tarefa 9: modo apresentação.
-- Tarefa 11: manifesto PWA.
+- Tarefa 9: manifesto PWA.
 
 Deve ser sequencial:
 
 - Tarefa 6 depende de cálculos e componentes de stats.
 - Tarefa 8 depende do texto de compartilhamento.
-- Tarefa 10 depende do modo apresentação.
-- Tarefas 12 e 13 dependem do manifesto PWA.
-- Tarefa 14 depende dos recursos avançados principais.
-- Tarefa 15 depende de tudo.
+- Tarefas 10 e 11 dependem do manifesto PWA.
+- Tarefa 12 depende dos recursos avançados principais.
+- Tarefa 13 depende de tudo.
 
 ## Critérios De Aceite
 
 - Ranking usa dados reais do histórico.
 - Estatísticas apresentam informações úteis por participante.
 - Compartilhamento gera texto claro do resultado.
-- Modo apresentação funciona em tela grande.
 - Aplicação possui configuração inicial para instalação como PWA.
+- App shell e assets essenciais funcionam offline após o primeiro carregamento.
 - `npm run typecheck` passa.
 - `npm run build` passa.
 
 ## Riscos E Decisões Pendentes
 
-- Definir regra de pontuação do ranking.
-- Decidir se estatísticas serão por nome textual ou por entidade de participante.
-- Definir quais recursos PWA entram antes de backend ou login.
+- Nomes diferentes que representem a mesma pessoa continuam sendo identidades distintas nesta versão, exceto por espaços externos e diferenças de caixa.
+- A invalidação do cache do service worker deve acompanhar novas versões dos assets.
+- Sincronização e identidade persistente por entidade dependem de uma fase futura com backend ou perfis.
+- Acompanhamento em TV, projetor ou outro dispositivo permanece como evolução futura e exige backend com sincronização em tempo real.
+
+## Decisões De Integração
+
+- Ranking e estatísticas ocupam a seção própria `Ranking`, alimentada pelo mesmo histórico local das partidas, para não competir com o placar e a criação de torneios.
+- Compartilhamento fica disponível no resultado recém-finalizado e nos detalhes da partida selecionada no histórico.
+- A navegação principal usa três opções de largura equivalente (`Partidas`, `Torneio` e `Ranking`) para permanecer clara em telas pequenas.
