@@ -49,6 +49,8 @@ export function App() {
     prepareNewMatch,
     startCurrentMatch,
     updateCurrentMatchScores,
+    renameCurrentMatchParticipant,
+    changeCurrentMatchGameKind,
   } = useCurrentMatch(restoredMatch);
   const {
     tournament,
@@ -60,6 +62,18 @@ export function App() {
   } = useTournament();
   const { matches, selectedMatchId } = historyState;
   const selectedMatch = matches.find((match) => match.id === selectedMatchId) ?? null;
+
+  useEffect(() => {
+    if (activeBracketMatchId || currentMatch?.status !== "in_progress" || !tournament?.bracket) return;
+    const participantIds = currentMatch.participants.map(({ id }) => id);
+    const restoredBracketMatch = tournament.bracket.rounds
+      .flatMap((round) => round.matches)
+      .find((match) =>
+        match.status === "ready" &&
+        match.participants.every((participant, index) => participant?.id === participantIds[index]),
+      );
+    if (restoredBracketMatch) setActiveBracketMatchId(restoredBracketMatch.id);
+  }, [activeBracketMatchId, currentMatch, tournament]);
 
   useEffect(() => {
     if (currentMatch?.status !== "finished") return;
@@ -146,7 +160,9 @@ export function App() {
               <CurrentMatchView
                 match={currentMatch}
                 onFinish={finishCurrentMatch}
+                onGameKindChange={changeCurrentMatchGameKind}
                 onNewMatch={prepareNewMatch}
+                onRenameParticipant={renameCurrentMatchParticipant}
                 onStart={startCurrentMatch}
                 onUpdateScores={updateCurrentMatchScores}
               />

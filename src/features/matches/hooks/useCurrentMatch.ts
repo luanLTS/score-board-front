@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import type { Match, MatchParticipant } from "../types";
+import type { GameKind } from "../../scoreboard/types";
 import {
   createPendingMatch,
   finishMatch,
@@ -58,6 +59,19 @@ export const useCurrentMatch = (initialMatch: Match | null = null) => {
     setCurrentMatch((match) => (match ? finishMatch(match) : match));
   };
 
+  const renameCurrentMatchParticipant = (participantId: string, name: string) => {
+    setCurrentMatch((match) => match ? {
+      ...match,
+      participants: match.participants.map((participant) =>
+        participant.id === participantId ? { ...participant, name } : participant,
+      ) as Match["participants"],
+    } : match);
+  };
+
+  const changeCurrentMatchGameKind = (gameKind: GameKind) => {
+    setCurrentMatch((match) => match ? { ...match, gameKind } : match);
+  };
+
   const prepareNewMatch = () => {
     setCurrentMatch(null);
   };
@@ -69,6 +83,8 @@ export const useCurrentMatch = (initialMatch: Match | null = null) => {
     updateCurrentMatchScore,
     updateCurrentMatchScores,
     finishCurrentMatch,
+    renameCurrentMatchParticipant,
+    changeCurrentMatchGameKind,
     prepareNewMatch,
   };
 };

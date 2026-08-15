@@ -63,6 +63,37 @@ describe("CurrentMatchView", () => {
     expect(onFinish).toHaveBeenCalledOnce();
   });
 
+  it("delegates every scoreboard action to the current match lifecycle", async () => {
+    const onGameKindChange = vi.fn();
+    const onNewMatch = vi.fn();
+    const onRenameParticipant = vi.fn();
+    const onUpdateScores = vi.fn();
+    const match: Match = { ...baseMatch, status: "in_progress", startedAt: new Date() };
+    const user = userEvent.setup();
+
+    render(
+      <CurrentMatchView
+        match={match}
+        onFinish={vi.fn()}
+        onGameKindChange={onGameKindChange}
+        onNewMatch={onNewMatch}
+        onRenameParticipant={onRenameParticipant}
+        onStart={vi.fn()}
+        onUpdateScores={onUpdateScores}
+      />,
+    );
+
+    await user.type(screen.getByDisplayValue("Ana"), " Maria");
+    await user.selectOptions(screen.getByLabelText("Tipo de jogo"), "fifa");
+    await user.click(screen.getByRole("button", { name: /Resetar pontua/ }));
+    await user.click(screen.getByRole("button", { name: "Iniciar nova partida" }));
+
+    expect(onRenameParticipant).toHaveBeenCalledWith("player-1", expect.any(String));
+    expect(onGameKindChange).toHaveBeenCalledWith("fifa");
+    expect(onUpdateScores).toHaveBeenCalledWith([0, 0]);
+    expect(onNewMatch).toHaveBeenCalledOnce();
+  });
+
   it("does not render mutable scoreboard controls after finishing", () => {
     const match: Match = {
       ...baseMatch,

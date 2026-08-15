@@ -29,8 +29,49 @@ export type ScoreboardProps = {
 };
 
 export function Scoreboard({
-  players: controlledPlayers,
-  gameKind: controlledGameKind,
+  players,
+  gameKind,
+  ...props
+}: ScoreboardProps) {
+  if (players !== undefined || gameKind !== undefined) {
+    if (players === undefined || gameKind === undefined) {
+      throw new Error("A controlled scoreboard requires both players and gameKind.");
+    }
+    return <ScoreboardView {...props} gameKind={gameKind} players={players} />;
+  }
+
+  return <PersistentScoreboard {...props} />;
+}
+
+function PersistentScoreboard(props: Omit<ScoreboardProps, "players" | "gameKind">) {
+  const scoreboard = usePersistentScoreboard(undefined, getGameRules);
+  return (
+    <ScoreboardView
+      {...props}
+      gameKind={scoreboard.gameKind}
+      onGameKindChange={scoreboard.setGameKind}
+      onNewMatch={props.onNewMatch ?? scoreboard.clearCurrentScoreboard}
+      onRenamePlayer={scoreboard.renamePlayer}
+      onReset={props.onReset ?? scoreboard.reset}
+      onScoreChange={(playerId, score) => {
+        const player = scoreboard.players.find((candidate) => candidate.id === playerId);
+        if (!player || player.score === score) return;
+        if (score > player.score) scoreboard.addPoint(playerId);
+        else scoreboard.removePoint(playerId);
+      }}
+      players={scoreboard.players}
+    />
+  );
+}
+
+type ScoreboardViewProps = Omit<ScoreboardProps, "players" | "gameKind"> & {
+  players: [ScoreboardPlayer, ScoreboardPlayer];
+  gameKind: GameKind;
+};
+
+function ScoreboardView({
+  players,
+  gameKind,
   onScoreChange,
   onRenamePlayer,
   onGameKindChange,
@@ -39,10 +80,7 @@ export function Scoreboard({
   onNewMatch,
   disabled = false,
   showActions = true,
-}: ScoreboardProps) {
-  const uncontrolled = usePersistentScoreboard(undefined, getGameRules);
-  const players = controlledPlayers ?? uncontrolled.players;
-  const gameKind = controlledGameKind ?? uncontrolled.gameKind;
+}: ScoreboardViewProps) {
   const state = useMemo<ScoreboardState>(
     () => ({ players, gameKind }),
     [gameKind, players],
@@ -53,9 +91,7 @@ export function Scoreboard({
     const nextScore = applyScoreDelta(player.score, delta, config);
     if (nextScore === player.score) return;
 
-    if (controlledPlayers) onScoreChange?.(player.id, nextScore);
-    else if (delta > 0) uncontrolled.addPoint(player.id);
-    else uncontrolled.removePoint(player.id);
+    onScoreChange?.(player.id, nextScore);
   };
 
   return (
@@ -69,8 +105,7 @@ export function Scoreboard({
           <GameKindSelect
             disabled={disabled}
             onChange={(nextGameKind) => {
-              if (controlledGameKind !== undefined) onGameKindChange?.(nextGameKind);
-              else uncontrolled.setGameKind(nextGameKind);
+              onGameKindChange?.(nextGameKind);
             }}
             selectedGameKind={gameKind}
           />
@@ -92,8 +127,7 @@ export function Scoreboard({
               onRemovePoint={() => changeScore(player, -1)}
               onRename={(name) => {
                 if (disabled) return;
-                if (controlledPlayers) onRenamePlayer?.(player.id, name);
-                else uncontrolled.renamePlayer(player.id, name);
+                onRenamePlayer?.(player.id, name);
               }}
               player={player}
             />
@@ -104,9 +138,9 @@ export function Scoreboard({
       {showActions ? (
         <ScoreboardActions
           disabled={disabled}
-          onClearCurrentScoreboard={onNewMatch ?? uncontrolled.clearCurrentScoreboard}
+          onClearCurrentScoreboard={onNewMatch ?? (() => undefined)}
           onFinishMatch={() => onFinishMatch(state)}
-          onReset={onReset ?? uncontrolled.reset}
+          onReset={onReset ?? (() => undefined)}
         />
       ) : null}
     </section>

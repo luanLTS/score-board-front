@@ -27,7 +27,16 @@ describe("historyStorage", () => {
   it("keeps backwards compatibility with history v1 entries without result", () => {
     const { result: _result, ...v1Match } = match;
 
-    expect(parseMatchHistory([v1Match])).toEqual([v1Match]);
+    expect(parseMatchHistory([v1Match])).toEqual([{ ...v1Match, result: match.result }]);
+  });
+
+  it("derives the winner for legacy entries without result metadata", () => {
+    const { result: _result, winnerId: _winnerId, ...legacyMatch } = match;
+
+    expect(parseMatchHistory([legacyMatch])[0].result).toEqual({
+      type: "winner",
+      winnerId: match.participants[0].id,
+    });
   });
 
   it("parses an explicit draw", () => {
@@ -50,6 +59,11 @@ describe("historyStorage", () => {
         { ...match, result: { type: "winner", winnerId: "unknown" } },
       ]),
     ).toEqual([]);
+  });
+
+  it("rejects legacy winner metadata that references an unknown participant", () => {
+    const { result: _result, ...v1Match } = match;
+    expect(parseMatchHistory([{ ...v1Match, winnerId: "unknown" }])).toEqual([]);
   });
 
   it("returns an empty history for invalid saved values", () => {

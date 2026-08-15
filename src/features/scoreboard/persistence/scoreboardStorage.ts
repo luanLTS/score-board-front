@@ -6,25 +6,20 @@ import {
 import type {
   GameKind,
   ScoreboardPlayer,
-  ScoreboardPlayerId,
   ScoreboardState,
 } from "../types";
 
 export type ScoreboardStorage = StorageAdapter<ScoreboardState>;
 
-const playerIds: ScoreboardPlayerId[] = ["player-1", "player-2"];
 const gameKinds: GameKind[] = ["generic", "truco", "fifa"];
 
-const isScoreboardPlayer = (
-  value: unknown,
-  index: number,
-): value is ScoreboardPlayer => {
+const isScoreboardPlayer = (value: unknown): value is ScoreboardPlayer => {
   if (!value || typeof value !== "object") return false;
 
   const player = value as Partial<ScoreboardPlayer>;
 
   return (
-    player.id === playerIds[index] &&
+    typeof player.id === "string" && player.id.trim().length > 0 &&
     typeof player.name === "string" &&
     typeof player.score === "number" &&
     Number.isInteger(player.score) &&
@@ -44,6 +39,7 @@ export const parseScoreboardState = (
   }
 
   if (!state.players.every(isScoreboardPlayer)) return null;
+  if (state.players[0].id === state.players[1].id) return null;
 
   if (
     typeof state.gameKind !== "undefined" &&

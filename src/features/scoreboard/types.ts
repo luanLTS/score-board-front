@@ -7,7 +7,7 @@ export type ScoreboardConfig = {
   allowNegativeScore: boolean;
 };
 
-export type ScoreboardPlayerId = "player-1" | "player-2";
+export type ScoreboardPlayerId = string;
 
 export type ScoreboardPlayer = {
   id: ScoreboardPlayerId;

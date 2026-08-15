@@ -31,7 +31,8 @@ const isDateValue = (value: unknown): value is Date | string =>
 
 const hasValidResult = (match: Partial<FinishedMatch>): boolean => {
   if (match.result === undefined) {
-    return match.winnerId === undefined || typeof match.winnerId === "string";
+    return match.winnerId === undefined ||
+      (typeof match.winnerId === "string" && match.participants?.some(({ id }) => id === match.winnerId) === true);
   }
 
   if (match.result.type === "draw") return match.winnerId === undefined;
@@ -71,12 +72,23 @@ export const parseMatchHistory = (value: unknown): FinishedMatch[] => {
   if (!Array.isArray(value)) return [];
   if (!value.every(isMatch)) return [];
 
-  return value.map((match) => ({
-    ...match,
-    participants: match.participants.map((participant) => ({
-      ...participant,
-    })) as FinishedMatch["participants"],
-  }));
+  return value.map((match) => {
+    const [first, second] = match.participants;
+    const legacyWinnerId = match.winnerId ??
+      (first.score === second.score
+        ? undefined
+        : first.score > second.score ? first.id : second.id);
+
+    return {
+      ...match,
+      result: match.result ?? (legacyWinnerId
+        ? { type: "winner" as const, winnerId: legacyWinnerId }
+        : { type: "draw" as const }),
+      participants: match.participants.map((participant) => ({
+        ...participant,
+      })) as FinishedMatch["participants"],
+    };
+  });
 };
 
 export const createHistoryStorage = (
