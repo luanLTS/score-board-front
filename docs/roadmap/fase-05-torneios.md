@@ -9,6 +9,7 @@ Adicionar uma camada de torneios acima das partidas, começando por criação de
 - Criar torneio.
 - Adicionar participantes.
 - Gerar chaveamento eliminatório simples.
+- Sortear aleatoriamente a distribuição inicial dos participantes no chaveamento.
 - Registrar resultados por confronto.
 - Avançar vencedores.
 - Finalizar torneio com campeão.
@@ -126,13 +127,15 @@ Adicionar uma camada de torneios acima das partidas, começando por criação de
 **Passos:**
 
 - Criar função para gerar chaveamento eliminatório.
-- Distribuir participantes em confrontos iniciais.
+- Embaralhar os participantes com Fisher-Yates antes de distribuí-los nos confrontos iniciais.
+- Realizar o sorteio uma única vez, no momento da geração do chaveamento.
 - Representar vagas futuras sem exigir partida criada imediatamente.
 - Tratar ou explicitar byes quando houver número ímpar.
 
 **Critério de pronto:**
 
-- Sistema gera confrontos iniciais previsíveis a partir dos participantes.
+- Sistema gera confrontos iniciais com distribuição aleatória, sem preservar a sequência de cadastro.
+- O gerador aceita RNG injetável para permitir testes determinísticos sem alterar o sorteio em produção.
 
 **Paralelismo:** sequencial após tipos e validação.
 
@@ -286,6 +289,7 @@ Adicionar uma camada de torneios acima das partidas, começando por criação de
 
 - Criar chave versionada para torneio atual.
 - Salvar criação, participantes, confrontos e avanços.
+- Persistir a distribuição sorteada; recarregar a página não realiza um novo sorteio.
 - Carregar torneio salvo com leitura segura.
 
 **Critério de pronto:**
@@ -364,6 +368,7 @@ Deve ser sequencial:
 
 - Usuário consegue criar torneio com participantes.
 - Sistema gera confrontos eliminatórios.
+- A primeira distribuição do chaveamento é aleatória e permanece a mesma após recarregar a página.
 - Cada confronto pode receber resultado.
 - Vencedores avançam corretamente.
 - Torneio identifica campeão.

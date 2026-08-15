@@ -37,6 +37,7 @@ describe("MatchDetails", () => {
     expect(screen.getByText("Vencedor: Ana")).toBeInTheDocument();
     expect(screen.getByText("15/06/2026 17:00")).toBeInTheDocument();
     expect(screen.getByText("15/06/2026 17:35")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Compartilhar resultado" })).toBeVisible();
   });
 
   it("renders an explicit draw result", () => {

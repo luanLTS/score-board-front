@@ -1,4 +1,5 @@
 import type { FinishedMatch } from "../types";
+import { ShareResultButton } from "../../sharing/components/ShareResultButton";
 
 type MatchFinishedActionsProps = {
   match: FinishedMatch;
@@ -34,13 +35,16 @@ export function MatchFinishedActions({
         </p>
       </div>
 
-      <button
-        className="rounded-md bg-teal-300 px-4 py-3 font-bold text-zinc-950 transition hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-zinc-900"
-        onClick={onNewMatch}
-        type="button"
-      >
-        Novo confronto
-      </button>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+        <button
+          className="min-h-11 rounded-md bg-teal-300 px-4 py-3 font-bold text-zinc-950 transition hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-zinc-900"
+          onClick={onNewMatch}
+          type="button"
+        >
+          Novo confronto
+        </button>
+        <ShareResultButton match={match} />
+      </div>
     </section>
   );
 }

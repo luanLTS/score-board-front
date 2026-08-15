@@ -1,4 +1,5 @@
 import type { FinishedMatch } from "../../matches/types";
+import { ShareResultButton } from "../../sharing/components/ShareResultButton";
 
 type MatchDetailsProps = {
   match: FinishedMatch | null;
@@ -88,6 +89,8 @@ export function MatchDetails({ match }: MatchDetailsProps) {
           <dd>{formatDateTime(match.finishedAt)}</dd>
         </div>
       </dl>
+
+      <ShareResultButton match={match} />
     </section>
   );
 }

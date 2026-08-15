@@ -466,8 +466,8 @@ Evoluções de produto:
 - Estatísticas por jogador.
 - Ranking entre amigos.
 - Templates de jogos.
-- Modo apresentação para TV ou projetor.
-- QR Code para acompanhar placar.
+- Acompanhamento remoto em TV, projetor ou outro dispositivo, mediante backend e sincronização em tempo real.
+- QR Code para acessar o acompanhamento remoto do placar.
 
 Evoluções técnicas:
 
@@ -527,7 +527,6 @@ Detalhamento por fase: [docs/roadmap/README.md](docs/roadmap/README.md).
 - Ranking.
 - Estatísticas.
 - Compartilhamento.
-- Modo apresentação.
 - PWA.
 
 ## Critérios De Sucesso

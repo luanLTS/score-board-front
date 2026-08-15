@@ -13,12 +13,13 @@ import {
   updateMatchScores,
 } from "../features/matches/utils/matchLifecycle";
 import { createScoreboardStorage } from "../features/scoreboard/persistence/scoreboardStorage";
+import { StatsView } from "../features/stats/components/StatsView";
 import { TournamentForm } from "../features/tournaments/components/TournamentForm";
 import { TournamentView } from "../features/tournaments/components/TournamentView";
 import { useTournament } from "../features/tournaments/hooks/useTournament";
 
 export function App() {
-  const [section, setSection] = useState<"matches" | "tournament">("matches");
+  const [section, setSection] = useState<"matches" | "tournament" | "stats">("matches");
   const [activeBracketMatchId, setActiveBracketMatchId] = useState<string | null>(null);
   const historyStorage = useMemo(() => createHistoryStorage(), []);
   const scoreboardStorage = useMemo(() => createScoreboardStorage(), []);
@@ -112,7 +113,7 @@ export function App() {
   return (
     <main className="min-h-screen bg-zinc-950 px-4 py-6 text-zinc-50">
       <div className="mx-auto w-full max-w-6xl space-y-6">
-        <nav aria-label="Seções" className="flex rounded-lg border border-zinc-800 bg-zinc-900/60 p-1">
+        <nav aria-label="Seções" className="grid grid-cols-3 rounded-lg border border-zinc-800 bg-zinc-900/60 p-1">
           <button
             aria-current={section === "matches" ? "page" : undefined}
             className={`flex-1 rounded-md px-4 py-2 text-sm font-semibold ${section === "matches" ? "bg-teal-300 text-zinc-950" : "text-zinc-300"}`}
@@ -129,8 +130,19 @@ export function App() {
           >
             Torneio
           </button>
+          <button
+            aria-current={section === "stats" ? "page" : undefined}
+            className={`rounded-md px-2 py-2 text-sm font-semibold sm:px-4 ${section === "stats" ? "bg-violet-300 text-zinc-950" : "text-zinc-300"}`}
+            onClick={() => setSection("stats")}
+            type="button"
+          >
+            Ranking
+          </button>
         </nav>
 
+        {section === "stats" ? (
+          <StatsView matches={matches} />
+        ) : (
         <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
           <div>
             {section === "tournament" && !activeBracketMatchId ? (
@@ -192,6 +204,7 @@ export function App() {
           <MatchDetails match={selectedMatch} />
           </aside>
         </div>
+        )}
       </div>
     </main>
   );

@@ -31,6 +31,7 @@ describe("MatchFinishedActions", () => {
 
     expect(screen.getByRole("heading", { name: "Ana venceu" })).toBeVisible();
     expect(screen.getByText("Ana 3 × 2 Bia")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Compartilhar resultado" })).toBeVisible();
 
     await userEvent.click(
       screen.getByRole("button", { name: "Novo confronto" }),
