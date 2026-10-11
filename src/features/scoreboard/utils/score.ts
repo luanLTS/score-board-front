@@ -67,11 +67,14 @@ export const decrementPlayerScore = (
     score: applyScoreDelta(player.score, -1, config),
   }));
 
-export const resetScores = (state: ScoreboardState): ScoreboardState => ({
+export const resetScores = (
+  state: ScoreboardState,
+  config = DEFAULT_SCOREBOARD_CONFIG,
+): ScoreboardState => ({
   ...state,
   players: state.players.map((player) => ({
     ...player,
-    score: 0,
+    score: config.allowNegativeScore ? 0 : config.minScore,
   })) as ScoreboardState["players"],
 });
 

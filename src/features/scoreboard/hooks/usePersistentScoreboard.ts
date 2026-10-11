@@ -72,7 +72,7 @@ export const usePersistentScoreboard = (
       return applyScoreDelta(score, -1, config) !== score;
     },
     reset: () => {
-      setState((currentState) => resetScores(currentState));
+      setState((currentState) => resetScores(currentState, getConfig(currentState.gameKind)));
     },
     clearCurrentScoreboard: () => {
       skipNextSave.current = true;

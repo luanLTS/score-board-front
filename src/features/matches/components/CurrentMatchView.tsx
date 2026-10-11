@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import { useState, type ComponentType } from "react";
 
 import { Scoreboard } from "../../scoreboard/components/Scoreboard";
 import type {
@@ -18,6 +18,7 @@ type CurrentMatchViewProps = {
   onGameKindChange?: (gameKind: GameKind) => void;
   onFinish: () => void;
   onNewMatch: () => void;
+  requireWinner?: boolean;
   ScoreboardComponent?: ComponentType<ControlledMatchScoreboardProps>;
 };
 
@@ -78,15 +79,29 @@ export function CurrentMatchView({
   onNewMatch,
   onRenameParticipant = () => undefined,
   onGameKindChange = () => undefined,
+  requireWinner = false,
   ScoreboardComponent = LegacyScoreboardAdapter,
 }: CurrentMatchViewProps) {
+  const [finishError, setFinishError] = useState<string | null>(null);
+
   if (match.status === "finished") {
     return <MatchFinishedActions match={match} onNewMatch={onNewMatch} />;
   }
 
   const handleFinish = (scores: [number, number]) => {
+    if (requireWinner && scores[0] === scores[1]) {
+      setFinishError("Este confronto de torneio precisa ter um vencedor.");
+      return;
+    }
+
+    setFinishError(null);
     onUpdateScores(scores);
     onFinish();
+  };
+
+  const handleScoresChange = (scores: [number, number]) => {
+    setFinishError(null);
+    onUpdateScores(scores);
   };
 
   return (
@@ -99,6 +114,12 @@ export function CurrentMatchView({
           {match.participants[0].name} × {match.participants[1].name}
         </h2>
       </header>
+
+      {finishError ? (
+        <p className="rounded-md bg-amber-300/10 p-3 text-sm text-amber-200" role="alert">
+          {finishError}
+        </p>
+      ) : null}
 
       {match.status === "pending" ? (
         <button
@@ -116,7 +137,7 @@ export function CurrentMatchView({
           onGameKindChange={onGameKindChange}
           onNewMatch={onNewMatch}
           onRenameParticipant={onRenameParticipant}
-          onScoresChange={onUpdateScores}
+          onScoresChange={handleScoresChange}
           participants={match.participants}
         />
       )}

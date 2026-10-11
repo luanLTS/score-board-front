@@ -1,4 +1,4 @@
-const CACHE_VERSION = "score-board-shell-v1";
+const CACHE_VERSION = "score-board-shell-__APP_VERSION__";
 const APP_SHELL = [
   "/",
   "/index.html",

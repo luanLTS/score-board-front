@@ -35,6 +35,8 @@ const hasValidResult = (match: Partial<FinishedMatch>): boolean => {
       (typeof match.winnerId === "string" && match.participants?.some(({ id }) => id === match.winnerId) === true);
   }
 
+  if (!match.result || typeof match.result !== "object") return false;
+
   if (match.result.type === "draw") return match.winnerId === undefined;
 
   if (match.result.type !== "winner") return false;

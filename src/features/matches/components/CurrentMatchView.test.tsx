@@ -115,4 +115,25 @@ describe("CurrentMatchView", () => {
     expect(screen.getByRole("heading", { name: "Empate" })).toBeVisible();
     expect(screen.queryByRole("button", { name: /Adicionar ponto/ })).toBeNull();
   });
+
+  it("does not finish a tournament match with a draw", async () => {
+    const user = userEvent.setup();
+    const onFinish = vi.fn();
+
+    render(
+      <CurrentMatchView
+        match={{ ...baseMatch, status: "in_progress", startedAt: new Date() }}
+        onFinish={onFinish}
+        onNewMatch={vi.fn()}
+        onStart={vi.fn()}
+        onUpdateScores={vi.fn()}
+        requireWinner
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /finalizar partida/i }));
+
+    expect(onFinish).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(/precisa ter um vencedor/i);
+  });
 });

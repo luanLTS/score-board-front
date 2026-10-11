@@ -36,7 +36,7 @@ O Score Board resolve esse problema oferecendo um placar genérico, fácil de us
 
 ## Funcionalidades Atuais
 
-Funcionalidades planejadas para a primeira versão:
+Funcionalidades entregues no MVP atual:
 
 - Placar para 2 jogadores ou equipes.
 - Nome editável para cada participante.
@@ -46,24 +46,21 @@ Funcionalidades planejadas para a primeira versão:
 - Bloqueio de pontuação negativa por padrão.
 - Ação para resetar pontuações.
 - Layout responsivo mobile-first.
+- Regras iniciais para partidas genéricas, truco e FIFA.
+- Ciclo de vida de partidas, histórico persistido localmente e detalhes do resultado.
+- Compartilhamento, ranking e estatísticas a partir do histórico.
+- Torneios eliminatórios simples com sorteio, byes, avanço e campeão.
+- Manifesto e app shell offline para instalação como PWA.
 
 ## Funcionalidades Futuras
 
-Possíveis evoluções:
+Próximas evoluções:
 
-- Seleção de tipo de jogo.
-- Regras de pontuação específicas por jogo.
-- Pontuação máxima configurável.
-- Histórico de partidas.
-- Gerenciamento de partidas.
-- Persistência local.
 - Persistência em backend.
-- Criação de torneios.
-- Chaveamento eliminatório.
-- Tabela de classificação.
 - Melhor de 3, melhor de 5 ou séries customizadas.
-- Compartilhamento de placar.
 - Exportação de resultados.
+- Regras específicas para partidas de tênis e campeonatos.
+- Formatos adicionais de torneio, como round-robin.
 
 ## Stack Utilizada
 
@@ -109,8 +106,8 @@ Responsabilidades:
 - `app`: composição principal da aplicação.
 - `components/ui`: componentes visuais reutilizáveis.
 - `features/scoreboard`: domínio e UI do placar.
-- `features/matches`: gerenciamento futuro de partidas.
-- `features/tournaments`: torneios e chaveamentos futuros.
+- `features/matches`: ciclo de vida e resultado das partidas.
+- `features/tournaments`: torneios e chaveamentos eliminatórios.
 - `hooks`: hooks genéricos.
 - `lib`: utilitários independentes de React.
 - `types`: contratos compartilhados.
@@ -131,7 +128,7 @@ Responsável por:
 
 ### Matches
 
-Módulo futuro para representar uma partida.
+Módulo responsável por representar uma partida.
 
 Responsável por:
 
@@ -153,7 +150,7 @@ Responsável por:
 
 ### History
 
-Módulo futuro para armazenar partidas finalizadas.
+Módulo responsável por armazenar partidas finalizadas localmente.
 
 Responsável por:
 
@@ -164,7 +161,7 @@ Responsável por:
 
 ### Tournaments
 
-Módulo futuro para campeonatos.
+Módulo responsável pelo MVP de campeonatos eliminatórios.
 
 Responsável por:
 

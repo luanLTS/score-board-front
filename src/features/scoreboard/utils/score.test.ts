@@ -149,4 +149,14 @@ describe("score utilities", () => {
       { id: "player-2", name: "Jogador 2", score: 0 },
     ]);
   });
+
+  it("resets scores to the configured minimum", () => {
+    const minimumConfig: ScoreboardConfig = {
+      gameKind: "generic",
+      minScore: 5,
+      allowNegativeScore: false,
+    };
+
+    expect(resetScores(createInitialScoreboardState(), minimumConfig).players.map(({ score }) => score)).toEqual([5, 5]);
+  });
 });

@@ -68,6 +68,8 @@ describe("historyStorage", () => {
 
   it("returns an empty history for invalid saved values", () => {
     expect(parseMatchHistory(null)).toEqual([]);
+    expect(parseMatchHistory([{ ...match, result: null }])).toEqual([]);
+    expect(parseMatchHistory([{ ...match, result: { type: "unknown" } }])).toEqual([]);
     expect(parseMatchHistory({ matches: [match] })).toEqual([]);
     expect(parseMatchHistory([{ ...match, status: "active" }])).toEqual([]);
     expect(parseMatchHistory([{ ...match, finishedAt: "not-a-date" }]))

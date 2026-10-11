@@ -177,6 +177,7 @@ export function App() {
                 onRenameParticipant={renameCurrentMatchParticipant}
                 onStart={startCurrentMatch}
                 onUpdateScores={updateCurrentMatchScores}
+                requireWinner={Boolean(activeBracketMatchId)}
               />
             ) : (
               <NewMatchForm

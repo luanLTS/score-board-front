@@ -36,6 +36,7 @@ describe("PWA assets", () => {
     expect(worker).toContain('caches.match("/index.html")');
     expect(worker).toContain('request.mode === "navigate"');
     expect(worker).toContain('key.startsWith("score-board-")');
+    expect(worker).toContain('const CACHE_VERSION = "score-board-shell-__APP_VERSION__"');
     expect(worker).toMatch(/html\.matchAll\([^\n]+assets[^\n]+\)/);
     expect(worker).toContain("cache.addAll([...new Set(assetUrls)])");
   });
