@@ -1,6 +1,7 @@
 export {
   HISTORY_STORAGE_KEYS,
   SCOREBOARD_STORAGE_KEYS,
+  TENNIS_STORAGE_KEYS,
   TOURNAMENT_STORAGE_KEYS,
 } from "./keys";
 export { createLocalStorageAdapter } from "./localStorageAdapter";

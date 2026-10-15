@@ -48,6 +48,8 @@ export const parseScoreboardState = (
     return null;
   }
 
+  // Older records may omit gameKind; default them to the generic scoreboard.
+  // Known legacy kinds are preserved so an existing match can be restored.
   return {
     gameKind: state.gameKind ?? "generic",
     players: state.players.map((player) => ({ ...player })) as

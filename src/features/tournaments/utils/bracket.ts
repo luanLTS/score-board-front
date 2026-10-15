@@ -88,7 +88,7 @@ const resolveByes = (bracket: TournamentBracket): TournamentBracket => {
         (participant): participant is TournamentParticipant => participant !== null,
       );
 
-      if (availableParticipants.length === 1 && match.round === 1) {
+    if (availableParticipants.length === 1 && match.status !== "finished") {
         nextBracket = advanceBracketWinner(nextBracket, match.id, availableParticipants[0].id);
       }
     }
@@ -120,7 +120,7 @@ export function advanceBracketWinner(
 
   const winner = sourceMatch.participants.find((participant) => participant?.id === winnerId);
   if (!winner) throw new Error("O vencedor deve participar do confronto.");
-  if (sourceMatch.participants.some((participant) => participant === null) && sourceMatch.round !== 1) {
+  if (sourceMatch.participants.some((participant) => participant === null) && sourceMatch.participants.filter(Boolean).length !== 1) {
     throw new Error("O confronto ainda não possui todos os participantes.");
   }
 

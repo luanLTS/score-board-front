@@ -63,6 +63,16 @@ describe("generateSingleEliminationBracket", () => {
 });
 
 describe("advanceBracketWinner", () => {
+  it("allows a single participant to advance through a bye in a later round", () => {
+    const bracket = generateSingleEliminationBracket(participants(5), keepOriginalOrder);
+    const byeMatch = bracket.rounds[1].matches.find((match) => match.participants.filter(Boolean).length === 1);
+
+    expect(byeMatch).toBeDefined();
+    const advanced = advanceBracketWinner(bracket, byeMatch!.id, byeMatch!.participants[0]!.id);
+
+    expect(advanced.rounds[1].matches.find((match) => match.id === byeMatch!.id)?.status).toBe("finished");
+  });
+
   it("finishes a match and advances its winner without mutating the bracket", () => {
     const bracket = generateSingleEliminationBracket(participants(4), keepOriginalOrder);
     const advanced = advanceBracketWinner(bracket, "round-1-match-1", "p2");

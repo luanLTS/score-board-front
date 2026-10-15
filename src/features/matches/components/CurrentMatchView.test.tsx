@@ -84,12 +84,12 @@ describe("CurrentMatchView", () => {
     );
 
     await user.type(screen.getByDisplayValue("Ana"), " Maria");
-    await user.selectOptions(screen.getByLabelText("Tipo de jogo"), "fifa");
+    expect(screen.queryByLabelText("Tipo de jogo")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Resetar pontua/ }));
     await user.click(screen.getByRole("button", { name: "Iniciar nova partida" }));
 
     expect(onRenameParticipant).toHaveBeenCalledWith("player-1", expect.any(String));
-    expect(onGameKindChange).toHaveBeenCalledWith("fifa");
+    expect(onGameKindChange).not.toHaveBeenCalled();
     expect(onUpdateScores).toHaveBeenCalledWith([0, 0]);
     expect(onNewMatch).toHaveBeenCalledOnce();
   });

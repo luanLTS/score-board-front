@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { NewMatchForm } from "./NewMatchForm";
 
 describe("NewMatchForm", () => {
-  it("submits trimmed participant names and the selected game kind", async () => {
+  it("submits trimmed participant names as a generic match", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
 
@@ -15,21 +15,19 @@ describe("NewMatchForm", () => {
     await user.type(screen.getByLabelText("Nome do participante 1"), "  Ana  ");
     await user.clear(screen.getByLabelText("Nome do participante 2"));
     await user.type(screen.getByLabelText("Nome do participante 2"), "Bruno");
-    await user.selectOptions(screen.getByLabelText("Tipo de jogo"), "truco");
     await user.click(screen.getByRole("button", { name: "Iniciar partida" }));
 
     expect(onSubmit).toHaveBeenCalledOnce();
     expect(onSubmit).toHaveBeenCalledWith({
       participantOneName: "Ana",
       participantTwoName: "Bruno",
-      gameKind: "truco",
+      gameKind: "generic",
     });
   });
 
   it("supports initial presentation values", () => {
     render(
       <NewMatchForm
-        initialGameKind="fifa"
         initialParticipantOneName="Time Azul"
         initialParticipantTwoName="Time Verde"
         onSubmit={() => undefined}
@@ -42,7 +40,7 @@ describe("NewMatchForm", () => {
     expect(screen.getByLabelText("Nome do participante 2")).toHaveValue(
       "Time Verde",
     );
-    expect(screen.getByLabelText("Tipo de jogo")).toHaveValue("fifa");
+    expect(screen.queryByLabelText("Tipo de jogo")).not.toBeInTheDocument();
   });
 
   it("does not allow a match without both participant names", async () => {
@@ -64,7 +62,7 @@ describe("NewMatchForm", () => {
 
     expect(screen.getByLabelText("Nome do participante 1")).toBeDisabled();
     expect(screen.getByLabelText("Nome do participante 2")).toBeDisabled();
-    expect(screen.getByLabelText("Tipo de jogo")).toBeDisabled();
+    expect(screen.queryByLabelText("Tipo de jogo")).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Iniciar partida" }),
     ).toBeDisabled();

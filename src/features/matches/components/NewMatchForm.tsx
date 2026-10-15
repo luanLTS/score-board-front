@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from "react";
 
-import { GameKindSelect } from "../../scoreboard/components/GameKindSelect";
 import { PlayerNameInput } from "../../scoreboard/components/PlayerNameInput";
 import type { GameKind } from "../../scoreboard/types";
 
@@ -14,7 +13,6 @@ type NewMatchFormProps = {
   onSubmit: (values: NewMatchFormValues) => void;
   initialParticipantOneName?: string;
   initialParticipantTwoName?: string;
-  initialGameKind?: GameKind;
   disabled?: boolean;
 };
 
@@ -22,7 +20,6 @@ export function NewMatchForm({
   onSubmit,
   initialParticipantOneName = "Jogador 1",
   initialParticipantTwoName = "Jogador 2",
-  initialGameKind = "generic",
   disabled = false,
 }: NewMatchFormProps) {
   const [participantOneName, setParticipantOneName] = useState(
@@ -31,7 +28,6 @@ export function NewMatchForm({
   const [participantTwoName, setParticipantTwoName] = useState(
     initialParticipantTwoName,
   );
-  const [gameKind, setGameKind] = useState<GameKind>(initialGameKind);
   const hasValidParticipants =
     participantOneName.trim().length > 0 && participantTwoName.trim().length > 0;
 
@@ -45,7 +41,7 @@ export function NewMatchForm({
     onSubmit({
       participantOneName: participantOneName.trim(),
       participantTwoName: participantTwoName.trim(),
-      gameKind,
+      gameKind: "generic",
     });
   };
 
@@ -60,7 +56,7 @@ export function NewMatchForm({
         </p>
         <h1 className="text-2xl font-bold sm:text-3xl">Prepare o confronto</h1>
         <p className="text-sm text-zinc-400">
-          Informe os participantes e escolha as regras da partida.
+          Informe os participantes para iniciar uma partida.
         </p>
       </header>
 
@@ -79,12 +75,6 @@ export function NewMatchForm({
           value={participantTwoName}
         />
       </fieldset>
-
-      <GameKindSelect
-        disabled={disabled}
-        onChange={setGameKind}
-        selectedGameKind={gameKind}
-      />
 
       <button
         className="w-full rounded-md bg-teal-300 px-4 py-3 font-bold text-zinc-950 transition hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"

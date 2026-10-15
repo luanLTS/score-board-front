@@ -26,6 +26,7 @@ export type ScoreboardProps = {
   onNewMatch?: () => void;
   disabled?: boolean;
   showActions?: boolean;
+  showGameKindSelect?: boolean;
 };
 
 export function Scoreboard({
@@ -80,6 +81,7 @@ function ScoreboardView({
   onNewMatch,
   disabled = false,
   showActions = true,
+  showGameKindSelect = true,
 }: ScoreboardViewProps) {
   const state = useMemo<ScoreboardState>(
     () => ({ players, gameKind }),
@@ -101,15 +103,17 @@ function ScoreboardView({
           <p className="text-sm font-medium uppercase text-teal-300">Score Board</p>
           <h1 className="text-3xl font-bold sm:text-5xl">Placar da partida</h1>
         </div>
-        <div className="w-full sm:w-48">
-          <GameKindSelect
-            disabled={disabled}
-            onChange={(nextGameKind) => {
-              onGameKindChange?.(nextGameKind);
-            }}
-            selectedGameKind={gameKind}
-          />
-        </div>
+        {showGameKindSelect ? (
+          <div className="w-full sm:w-48">
+            <GameKindSelect
+              disabled={disabled}
+              onChange={(nextGameKind) => {
+                onGameKindChange?.(nextGameKind);
+              }}
+              selectedGameKind={gameKind}
+            />
+          </div>
+        ) : null}
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2">
