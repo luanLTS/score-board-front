@@ -9,3 +9,9 @@ export const HISTORY_STORAGE_KEYS = {
 export const TOURNAMENT_STORAGE_KEYS = {
   currentTournamentV1: "score-board:current-tournament:v1",
 } as const;
+
+export const TENNIS_STORAGE_KEYS = {
+  currentMatchV1: "score-board:tennis-current-match:v1",
+  matchHistoryV1: "score-board:tennis-match-history:v1",
+  currentTournamentV1: "score-board:tennis-current-tournament:v1",
+} as const;

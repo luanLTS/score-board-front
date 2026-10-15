@@ -1,0 +1,33 @@
+schema: spec-driven
+
+context: |
+  Escreva os artefatos do OpenSpec em português do Brasil.
+  O projeto é uma aplicação React, TypeScript e Vite para placares, partidas,
+  histórico e torneios, com lógica de domínio isolada e testável.
+  Preserve as funcionalidades já existentes, especialmente o placar genérico,
+  partidas simples, histórico e chaveamento genérico.
+  O placar genérico não deve depender de regras específicas de FIFA, truco ou
+  tênis. Regras específicas de tênis devem ficar no módulo próprio de tênis.
+  Evite dependências novas e abstrações sem uso imediato.
+
+rules:
+  proposal:
+    - Descrever explicitamente o que fica fora do escopo.
+    - Registrar impactos nas funcionalidades existentes.
+  specs:
+    - Escrever requisitos como comportamentos observáveis e cenários testáveis.
+    - Não incluir nomes de funções, componentes ou detalhes de implementação.
+  design:
+    - Seguir a arquitetura por features existente.
+    - Manter regras de negócio em funções puras e testáveis quando possível.
+  tasks:
+    - Incluir testes para cada regra de negócio relevante.
+    - Incluir npm test, npm run typecheck e npm run build na validação final.
+
+operations:
+  apply:
+    guidance:
+      - Implementar uma tarefa por vez e preservar os testes existentes.
+  archive:
+    guidance:
+      - Resumir as decisões e os cenários entregues ao arquivar a mudança.

@@ -61,6 +61,7 @@ const LegacyScoreboardAdapter = ({
       onReset={() => onScoresChange([0, 0])}
       onScoreChange={handleScoreChange}
       players={players}
+      showGameKindSelect={false}
     />
   );
 };

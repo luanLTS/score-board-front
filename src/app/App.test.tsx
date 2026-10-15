@@ -22,6 +22,7 @@ describe("App phase 3 persistence and history", () => {
           { id: "player-1", name: "Ana", score: 2 },
           { id: "player-2", name: "Bruno", score: 1 },
         ],
+        gameKind: "fifa",
       }),
     );
 
@@ -31,6 +32,7 @@ describe("App phase 3 persistence and history", () => {
     expect(screen.getByLabelText("Pontuação de Ana")).toHaveTextContent("2");
     expect(screen.getByDisplayValue("Bruno")).toBeInTheDocument();
     expect(screen.getByLabelText("Pontuação de Bruno")).toHaveTextContent("1");
+    expect(screen.queryByLabelText("Tipo de jogo")).not.toBeInTheDocument();
   });
 
   it("finishes a match, shows it in history, opens details, and can clear only the current scoreboard", async () => {
@@ -42,7 +44,7 @@ describe("App phase 3 persistence and history", () => {
     await user.type(screen.getByLabelText("Nome do participante 1"), "Ana");
     await user.clear(screen.getByLabelText("Nome do participante 2"));
     await user.type(screen.getByLabelText("Nome do participante 2"), "Bruno");
-    await user.selectOptions(screen.getByLabelText("Tipo de jogo"), "fifa");
+    expect(screen.queryByLabelText("Tipo de jogo")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Iniciar partida" }));
     await user.click(
       screen.getByRole("button", { name: "Adicionar ponto para Ana" }),
@@ -62,14 +64,14 @@ describe("App phase 3 persistence and history", () => {
     expect(screen.getByRole("heading", { name: "Ana x Bruno" }))
       .toBeInTheDocument();
     expect(screen.getByLabelText("Placar final")).toHaveTextContent("1 x 2");
-    expect(screen.getAllByText("Fifa").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Generico").length).toBeGreaterThan(0);
     expect(
       JSON.parse(
         window.localStorage.getItem(
           HISTORY_STORAGE_KEYS.finishedMatchesV1,
         ) ?? "[]",
       )[0],
-    ).toMatchObject({ gameKind: "fifa" });
+    ).toMatchObject({ gameKind: "generic" });
     expect(
       JSON.parse(
         window.localStorage.getItem(
@@ -142,5 +144,28 @@ describe("App phase 3 persistence and history", () => {
     expect(screen.getAllByText("Ana").length).toBeGreaterThan(0);
     expect(screen.getAllByRole("listitem")[0]).toHaveTextContent("3 pts");
     expect(screen.queryByRole("button", { name: "Iniciar partida" })).not.toBeInTheDocument();
+  });
+
+  it("allows switching between the generic scoreboard and tennis areas", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    expect(screen.getByRole("button", { name: "Placar" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("button", { name: "Tênis" })).not.toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Tênis" }));
+
+    expect(screen.getByRole("button", { name: "Tênis" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("heading", { name: "Tênis" })).toBeInTheDocument();
   });
 });
