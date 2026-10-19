@@ -106,9 +106,20 @@ export function TennisTournamentWorkspace() {
     setActiveMatch(next);
     if (next.status !== "finished" || !next.winnerId || !activeMatchId) return;
     const winnerId = next.winnerId;
-    setTournament((current) => current
-      ? { ...recordEliminationWinner(current, activeMatchId, winnerId), activeMatch: undefined, activeMatchId: undefined }
-      : current);
+    const matchId = activeMatchId;
+    setActiveMatch(null);
+    setActiveMatchId(null);
+    setTournament((current) => {
+      if (!current || current.status !== "elimination_in_progress" || !current.eliminationBracket) {
+        return current;
+      }
+
+      return {
+        ...recordEliminationWinner(current, matchId, winnerId),
+        activeMatch: undefined,
+        activeMatchId: undefined,
+      };
+    });
   };
 
   if (!tournament) {

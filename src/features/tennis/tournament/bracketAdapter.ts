@@ -25,7 +25,15 @@ export const resolveTennisByes = (initialBracket: TournamentBracket): Tournament
     for (const round of bracket.rounds) {
       for (const match of round.matches) {
         const available = match.participants.filter((participant): participant is TournamentParticipant => participant !== null);
-        if (available.length === 1 && match.status !== "finished") {
+        const incomingMatches = bracket.rounds
+          .flatMap((candidateRound) => candidateRound.matches)
+          .filter((candidate) => candidate.nextMatchId === match.id);
+        const isFirstRound = round.number === bracket.rounds[0]?.number;
+        const allIncomingMatchesResolved = incomingMatches.length > 0 && incomingMatches.every((candidate) =>
+          candidate.status === "finished" || candidate.participants.every((participant) => participant === null),
+        );
+
+        if (available.length === 1 && match.status !== "finished" && (isFirstRound || allIncomingMatchesResolved)) {
           bracket = advanceBracketWinner(bracket, match.id, available[0].id);
           resolvedBye = true;
         }

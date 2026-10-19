@@ -42,8 +42,26 @@ describe("createTennisEliminationBracket", () => {
       bracket = resolveTennisByes(bracket);
     }
 
-    expect(bracket.rounds.flatMap((round) => round.matches).some((match) =>
-      match.participants.filter(Boolean).length === 1 && match.status !== "finished",
-    )).toBe(false);
+    expect(bracket.rounds[1].matches[1]).toMatchObject({
+      participants: [{ id: "p3", name: "Pessoa 3" }, null],
+      status: "finished",
+      winnerId: "p3",
+    });
+    expect(bracket.rounds[2].matches[0]).toMatchObject({
+      participants: [null, { id: "p3", name: "Pessoa 3" }],
+      status: "pending",
+    });
+  });
+
+  it("does not resolve the final before both semifinal winners are known", () => {
+    let bracket = createTennisEliminationBracket(participants(4));
+    const firstSemifinal = bracket.rounds[0].matches[0];
+
+    bracket = resolveTennisByes(advanceBracketWinner(bracket, firstSemifinal.id, "p1"));
+
+    expect(bracket.rounds[1].matches[0]).toMatchObject({
+      participants: [{ id: "p1", name: "Pessoa 1" }, null],
+      status: "pending",
+    });
   });
 });
