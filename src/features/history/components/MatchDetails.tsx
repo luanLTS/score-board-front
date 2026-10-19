@@ -3,6 +3,8 @@ import { ShareResultButton } from "../../sharing/components/ShareResultButton";
 
 type MatchDetailsProps = {
   match: FinishedMatch | null;
+  formatLabel?: string;
+  extraDetails?: string[];
 };
 
 const gameKindLabels: Record<FinishedMatch["gameKind"], string> = {
@@ -22,7 +24,7 @@ const formatDateTime = (value: Date | string): string =>
     .format(new Date(value))
     .replace(",", "");
 
-export function MatchDetails({ match }: MatchDetailsProps) {
+export function MatchDetails({ match, formatLabel, extraDetails = [] }: MatchDetailsProps) {
   if (!match) {
     return (
       <section
@@ -78,7 +80,7 @@ export function MatchDetails({ match }: MatchDetailsProps) {
       <dl className="grid gap-3 text-sm text-zinc-300 sm:grid-cols-3">
         <div>
           <dt className="text-zinc-500">Tipo</dt>
-          <dd>{gameKindLabels[match.gameKind]}</dd>
+          <dd>{formatLabel ?? gameKindLabels[match.gameKind]}</dd>
         </div>
         <div>
           <dt className="text-zinc-500">Inicio</dt>
@@ -89,6 +91,8 @@ export function MatchDetails({ match }: MatchDetailsProps) {
           <dd>{formatDateTime(match.finishedAt)}</dd>
         </div>
       </dl>
+
+      {extraDetails.length ? <ul aria-label="Detalhes adicionais" className="space-y-1 text-sm text-zinc-300">{extraDetails.map((detail) => <li key={detail}>{detail}</li>)}</ul> : null}
 
       <ShareResultButton match={match} />
     </section>

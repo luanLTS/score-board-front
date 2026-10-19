@@ -22,6 +22,7 @@ export const createSuperTiebreakMatch = (
     serverId: firstServerId,
     pointsPlayed: 0,
     sidesChangedAt: [],
+    startedAt: new Date(),
   };
 };
 
@@ -43,6 +44,7 @@ export const createBestOfThreeMatch = (
       gamesWon: [0, 0],
       status: "in_progress",
     }],
+    startedAt: new Date(),
   };
 };
 

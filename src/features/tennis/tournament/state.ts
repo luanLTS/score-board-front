@@ -24,7 +24,7 @@ const ensureCanStartNextTurn = (tournament: TennisTournamentState) => {
 export const createTennisTournament = (
   name: string,
   participantIds: string[],
-  id = "tennis-tournament-1",
+  id = `tennis-tournament-${Date.now()}`,
 ): TennisTournamentState => {
   const uniqueIds = new Set(participantIds);
   if (name.trim().length === 0) throw new Error("Informe um nome para o campeonato.");

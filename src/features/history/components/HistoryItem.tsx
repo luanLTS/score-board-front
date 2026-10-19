@@ -4,6 +4,7 @@ type HistoryItemProps = {
   match: FinishedMatch;
   isSelected: boolean;
   onSelect: (matchId: string) => void;
+  formatLabel?: string;
 };
 
 const gameKindLabels: Record<FinishedMatch["gameKind"], string> = {
@@ -15,7 +16,7 @@ const gameKindLabels: Record<FinishedMatch["gameKind"], string> = {
 const formatDate = (value: Date | string): string =>
   new Intl.DateTimeFormat("pt-BR").format(new Date(value));
 
-export function HistoryItem({ match, isSelected, onSelect }: HistoryItemProps) {
+export function HistoryItem({ match, isSelected, onSelect, formatLabel }: HistoryItemProps) {
   const [home, away] = match.participants;
   const label = `${home.name} ${home.score} x ${away.score} ${away.name}`;
 
@@ -35,7 +36,7 @@ export function HistoryItem({ match, isSelected, onSelect }: HistoryItemProps) {
     >
       <span className="block font-semibold text-zinc-50">{label}</span>
       <span className="mt-2 flex flex-wrap gap-3 text-sm text-zinc-400">
-        <span>{gameKindLabels[match.gameKind]}</span>
+        <span>{formatLabel ?? gameKindLabels[match.gameKind]}</span>
         <span>{formatDate(match.finishedAt)}</span>
       </span>
     </button>

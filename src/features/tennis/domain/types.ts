@@ -26,6 +26,7 @@ export type SuperTiebreakState = {
   firstServerId: TennisParticipantId;
   serverId: TennisParticipantId;
   pointsPlayed: number;
+  startedAt?: Date | string;
   sidesChangedAt: number[];
   participantNames?: Record<TennisParticipantId, string>;
   winnerId?: TennisParticipantId;
@@ -39,6 +40,7 @@ export type TennisMatchState = {
   serverId: TennisParticipantId;
   gamesWon: [number, number];
   games: TennisGameState[];
+  startedAt?: Date | string;
   winnerId?: TennisParticipantId;
 };
 

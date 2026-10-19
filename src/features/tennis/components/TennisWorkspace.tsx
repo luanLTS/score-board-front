@@ -4,6 +4,13 @@ import { advanceSuperTiebreak } from "../domain/rules/superTiebreak";
 import { createSuperTiebreakMatch } from "../matchFactory";
 import { createTennisMatchStorage } from "../matchFactory";
 import { createTennisHistoryRecord, createTennisHistoryStorage } from "../persistence/tennisHistory";
+import { tennisHistoryToFinishedMatch } from "../persistence/tennisHistory";
+import { calculateRanking } from "../../stats/utils/ranking";
+import { calculatePlayerStats } from "../../stats/utils/playerStats";
+import { RankingList } from "../../stats/components/RankingList";
+import { PlayerStatsPanel } from "../../stats/components/PlayerStatsPanel";
+import { HistoryList } from "../../history/components/HistoryList";
+import { MatchDetails } from "../../history/components/MatchDetails";
 import type { SuperTiebreakState } from "../domain/types";
 
 import { TennisMatchView } from "./TennisMatchView";
@@ -17,11 +24,18 @@ type TennisWorkspaceProps = {
 export function TennisWorkspace({ onSelect }: TennisWorkspaceProps) {
   const matchStorage = useMemo(() => createTennisMatchStorage(), []);
   const historyStorage = useMemo(() => createTennisHistoryStorage(), []);
-  const history = historyStorage.list();
+  const [history, setHistory] = useState(() => historyStorage.list());
   const restoredMatch = useMemo(() => matchStorage.load(), [matchStorage]);
   const [activeSection, setActiveSection] = useState<"match" | "ranking" | "tournament" | null>(null);
   const [match, setMatch] = useState<SuperTiebreakState | null>(restoredMatch);
   const [participantNames, setParticipantNames] = useState<Record<string, string>>(restoredMatch?.participantNames ?? {});
+  const [selectedHistoryId, setSelectedHistoryId] = useState<string | undefined>();
+  const [selectedPlayerKey, setSelectedPlayerKey] = useState<string>();
+  const tennisMatches = history.map(tennisHistoryToFinishedMatch);
+  const ranking = calculateRanking(tennisMatches);
+  const stats = calculatePlayerStats(tennisMatches);
+  const selectedStats = stats.find(({ playerKey }) => playerKey === selectedPlayerKey) ?? stats[0];
+  const selectedHistoryRecord = history.find(({ id }) => id === selectedHistoryId);
   const historyId = useRef(restoredMatch ? `restored-${restoredMatch.firstServerId}-${restoredMatch.participants.join("-")}` : null);
 
   useEffect(() => {
@@ -36,10 +50,14 @@ export function TennisWorkspace({ onSelect }: TennisWorkspaceProps) {
       id: historyId.current,
       match,
       participantNames,
-      startedAt: new Date(),
+      startedAt: match.startedAt ?? new Date(),
       finishedAt: new Date(),
     }));
+    setHistory(historyStorage.list());
   }, [historyStorage, match, participantNames]);
+  useEffect(() => {
+    if (activeSection === "ranking") setHistory(historyStorage.list());
+  }, [activeSection, historyStorage]);
   const selectSection = (section: "match" | "ranking" | "tournament") => {
     setActiveSection(section);
     onSelect?.(section);
@@ -109,17 +127,21 @@ export function TennisWorkspace({ onSelect }: TennisWorkspaceProps) {
       {activeSection === "ranking" ? (
         <section className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-4">
           <h2 className="text-xl font-bold">Ranking geral do tênis</h2>
-          <p className="mt-2 text-sm text-zinc-400">O ranking será alimentado pelos campeonatos e partidas finalizadas.</p>
-          <h3 className="mt-5 font-semibold">Partidas finalizadas</h3>
-          {history.length > 0 ? (
-            <ul className="mt-2 space-y-2 text-sm">
-              {history.map((record) => (
-                <li className="rounded border border-zinc-800 px-3 py-2" key={record.id}>
-                  {record.participants[0].name} × {record.participants[1].name}: {record.finalScore[0]} × {record.finalScore[1]}
-                </li>
-              ))}
-            </ul>
-          ) : <p className="mt-2 text-sm text-zinc-500">Nenhuma partida finalizada.</p>}
+        <RankingList entries={ranking} />
+        <PlayerStatsPanel players={ranking} stats={selectedStats} onSelectPlayer={setSelectedPlayerKey} />
+        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+          <HistoryList matches={tennisMatches} selectedMatchId={selectedHistoryId} onSelectMatch={setSelectedHistoryId} getFormatLabel={(match) => {
+            const record = history.find(({ id }) => id === match.id)!;
+            return `${record.format === "super_tiebreak" ? "Super tie-break" : "Melhor de 3 games"}${record.tournamentName ? ` · ${record.tournamentName}` : ""}`;
+          }} />
+          <MatchDetails match={selectedHistoryRecord ? tennisHistoryToFinishedMatch(selectedHistoryRecord) : null}
+            formatLabel={selectedHistoryRecord ? (selectedHistoryRecord.format === "super_tiebreak" ? "Super tie-break" : "Melhor de 3 games") : undefined}
+            extraDetails={selectedHistoryRecord ? [
+              ...(selectedHistoryRecord.tournamentName ? [`Campeonato: ${selectedHistoryRecord.tournamentName}`] : []),
+              ...(selectedHistoryRecord.roundLabel ? [`Fase: ${selectedHistoryRecord.roundLabel}`] : []),
+              ...(selectedHistoryRecord.games ?? []).map((game, index) => `Game ${index + 1}: ${game.points[0]} × ${game.points[1]}`),
+            ] : []} />
+        </div>
         </section>
       ) : null}
 

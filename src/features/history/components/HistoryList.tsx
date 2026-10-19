@@ -6,12 +6,14 @@ type HistoryListProps = {
   matches: FinishedMatch[];
   selectedMatchId?: string;
   onSelectMatch: (matchId: string) => void;
+  getFormatLabel?: (match: FinishedMatch) => string;
 };
 
 export function HistoryList({
   matches,
   selectedMatchId,
   onSelectMatch,
+  getFormatLabel,
 }: HistoryListProps) {
   return (
     <section className="space-y-4" aria-labelledby="history-title">
@@ -35,6 +37,7 @@ export function HistoryList({
                 isSelected={match.id === selectedMatchId}
                 match={match}
                 onSelect={onSelectMatch}
+                formatLabel={getFormatLabel?.(match)}
               />
             </div>
           ))}

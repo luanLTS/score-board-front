@@ -37,7 +37,8 @@ export type TennisTournamentState = {
     | "turn_in_progress"
     | "turn_closed"
     | "elimination_in_progress"
-    | "finished";
+    | "finished"
+    | "cancelled";
   participants: TennisTournamentParticipant[];
   currentTurn: number;
   turns: TennisQualifyingTurn[];
@@ -45,6 +46,8 @@ export type TennisTournamentState = {
   eliminationBracket?: TournamentBracket;
   activeMatch?: TennisMatch;
   activeMatchId?: string;
+  createdAt?: Date | string;
+  terminalAt?: Date | string;
 };
 import type { TournamentBracket } from "../../tournaments/types";
 

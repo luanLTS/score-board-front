@@ -16,6 +16,7 @@ const statuses = new Set<TennisTournamentState["status"]>([
   "turn_closed",
   "elimination_in_progress",
   "finished",
+  "cancelled",
 ]);
 
 const isMatch = (value: unknown): value is TennisQualifyingMatch => {

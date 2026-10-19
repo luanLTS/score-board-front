@@ -3,7 +3,8 @@ import {
   TENNIS_STORAGE_KEYS,
   type StorageAdapter,
 } from "../../../lib/storage";
-import type { SuperTiebreakState, TennisParticipantId } from "../domain/types";
+import type { SuperTiebreakState, TennisMatchState, TennisParticipantId } from "../domain/types";
+import type { FinishedMatch } from "../../matches/types";
 
 export type TennisHistoryFormat = "super_tiebreak" | "best_of_three_games";
 
@@ -21,6 +22,11 @@ export type TennisHistoryRecord = {
   winnerId: string;
   startedAt: Date | string;
   finishedAt: Date | string;
+  source?: "simple" | "qualifying" | "elimination";
+  tournamentId?: string;
+  tournamentName?: string;
+  roundLabel?: string;
+  games?: Array<{ score: [number, number]; points: [string, string] }>;
 };
 
 export type TennisHistoryStorage = {
@@ -35,6 +41,18 @@ type CreateTennisHistoryRecordInput = {
   participantNames: Record<TennisParticipantId, string>;
   startedAt: Date | string;
   finishedAt: Date | string;
+};
+
+type CreateTournamentTennisHistoryRecordInput = {
+  id: string;
+  match: SuperTiebreakState | TennisMatchState;
+  participantNames: Record<TennisParticipantId, string>;
+  startedAt?: Date | string;
+  finishedAt: Date | string;
+  source: "qualifying" | "elimination";
+  tournamentId: string;
+  tournamentName: string;
+  roundLabel: string;
 };
 
 export const createTennisHistoryRecord = ({
@@ -60,8 +78,42 @@ export const createTennisHistoryRecord = ({
     winnerId: match.winnerId,
     startedAt,
     finishedAt,
+    source: "simple",
   };
 };
+
+export const createTournamentTennisHistoryRecord = ({
+  id, match, participantNames, startedAt, finishedAt, source, tournamentId, tournamentName, roundLabel,
+}: CreateTournamentTennisHistoryRecordInput): TennisHistoryRecord => {
+  if (match.status !== "finished" || !match.winnerId) throw new Error("A partida precisa estar finalizada.");
+  const isSuper = match.format === "super_tiebreak";
+  return {
+    id,
+    format: match.format,
+    participants: match.participants.map((participantId) => ({ id: participantId, name: participantNames[participantId] ?? participantId })) as TennisHistoryRecord["participants"],
+    finalScore: isSuper ? match.scores : match.gamesWon,
+    firstServerId: match.firstServerId,
+    winnerId: match.winnerId,
+    startedAt: startedAt ?? match.startedAt ?? finishedAt,
+    finishedAt,
+    source,
+    tournamentId,
+    tournamentName,
+    roundLabel,
+    ...(!isSuper ? { games: match.games.map((game) => ({ score: game.gamesWon, points: game.points.map(String) as [string, string] })) } : {}),
+  };
+};
+
+export const tennisHistoryToFinishedMatch = (record: TennisHistoryRecord): FinishedMatch => ({
+  id: record.id,
+  status: "finished",
+  gameKind: "generic",
+  participants: record.participants.map((participant, index) => ({ ...participant, score: record.finalScore[index as 0 | 1] })) as FinishedMatch["participants"],
+  startedAt: record.startedAt,
+  finishedAt: record.finishedAt,
+  winnerId: record.winnerId,
+  result: { type: "winner", winnerId: record.winnerId },
+});
 
 const isDateValue = (value: unknown): value is Date | string =>
   (value instanceof Date || typeof value === "string") &&
@@ -97,6 +149,11 @@ const isRecord = (value: unknown): value is TennisHistoryRecord => {
     record.participants.some((participant) => participant.id === record.winnerId) &&
     isDateValue(record.startedAt) &&
     isDateValue(record.finishedAt)
+    && (record.source === undefined || ["simple", "qualifying", "elimination"].includes(record.source))
+    && (record.tournamentId === undefined || typeof record.tournamentId === "string")
+    && (record.tournamentName === undefined || typeof record.tournamentName === "string")
+    && (record.roundLabel === undefined || typeof record.roundLabel === "string")
+    && (record.games === undefined || (Array.isArray(record.games) && record.games.every((game) => Array.isArray(game.score) && game.score.length === 2 && Array.isArray(game.points) && game.points.length === 2)))
   );
 };
 
@@ -111,6 +168,9 @@ export const createTennisHistoryStorage = (
   ),
 ): TennisHistoryStorage => ({
   list: () => parseTennisHistory(adapter.load()),
-  add: (record) => adapter.save([record, ...parseTennisHistory(adapter.load())]),
+  add: (record) => {
+    const records = parseTennisHistory(adapter.load());
+    if (!records.some(({ id }) => id === record.id)) adapter.save([record, ...records]);
+  },
   clear: () => adapter.clear(),
 });

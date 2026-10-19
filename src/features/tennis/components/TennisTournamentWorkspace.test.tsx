@@ -21,6 +21,28 @@ describe("TennisTournamentWorkspace", () => {
     expect(screen.getAllByRole("button", { name: "Jogar partida" })).toHaveLength(6);
   });
 
+  it("cancels during an active match, preserves completed matches, and archives the championship", async () => {
+    const user = userEvent.setup();
+    render(<TennisTournamentWorkspace />);
+    await user.clear(screen.getByLabelText("Participantes"));
+    await user.type(screen.getByLabelText("Participantes"), "Ana, Bia, Carlos, Davi");
+    await user.click(screen.getByRole("button", { name: "Iniciar campeonato" }));
+    await user.click(screen.getAllByRole("button", { name: "Jogar partida" })[0]);
+    for (let index = 0; index < 10; index += 1) await user.click(screen.getByRole("button", { name: "Ponto para Ana" }));
+    await user.click(screen.getByRole("button", { name: "Voltar ao campeonato" }));
+    await user.click(screen.getAllByRole("button", { name: "Jogar partida" })[0]);
+    await user.click(screen.getByRole("button", { name: "Cancelar campeonato" }));
+    await user.click(screen.getByRole("button", { name: "Confirmar cancelamento" }));
+
+    const saved = JSON.parse(window.localStorage.getItem(TENNIS_STORAGE_KEYS.matchHistoryV1) ?? "[]") as Array<{ winnerId: string }>;
+    const archived = JSON.parse(window.localStorage.getItem(TENNIS_STORAGE_KEYS.tournamentHistoryV1) ?? "[]") as Array<{ status: string; turns: Array<{ matches: Array<{ status: string }> }> }>;
+    expect(saved).toHaveLength(1);
+    expect(saved[0].winnerId).toBe("tennis-player-1");
+    expect(archived[0].status).toBe("cancelled");
+    expect(archived[0].turns[0].matches.filter(({ status }) => status === "finished")).toHaveLength(1);
+    expect(archived[0].turns[0].matches.filter(({ status }) => status === "pending")).toHaveLength(5);
+  });
+
   it("restores an active qualifying match after reload", async () => {
     const user = userEvent.setup();
     const { unmount } = render(<TennisTournamentWorkspace />);
@@ -87,6 +109,32 @@ describe("TennisTournamentWorkspace", () => {
     await user.click(screen.getByRole("button", { name: "Ponto para Ana" }));
 
     expect(screen.getByText("Finalizado")).toBeInTheDocument();
+    await waitFor(() => {
+      const history = JSON.parse(window.localStorage.getItem(TENNIS_STORAGE_KEYS.tournamentHistoryV1) ?? "[]") as Array<{ id: string; status: string }>;
+      expect(history).toHaveLength(1);
+      expect(history[0]).toMatchObject({ id: "t1", status: "finished" });
+    });
+  });
+
+  it("cancels an elimination match, discards its active score, and allows a new championship", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem(TENNIS_STORAGE_KEYS.currentTournamentV1, JSON.stringify({
+      id: "cup-elim", name: "Copa", phase: "elimination", status: "elimination_in_progress",
+      participants: [{ id: "a", name: "Ana" }, { id: "b", name: "Bia" }], currentTurn: 1, turns: [],
+      ranking: [{ participantId: "a", wins: 0, pointDifferential: 0 }, { participantId: "b", wins: 0, pointDifferential: 0 }],
+      activeMatchId: "final", activeMatch: { format: "best_of_three_games", status: "in_progress", participants: ["a", "b"], firstServerId: "a", serverId: "a", gamesWon: [1, 1], games: [{ participants: ["a", "b"], points: [40, 0], gamesWon: [1, 1], status: "in_progress" }] },
+      eliminationBracket: { rounds: [{ number: 1, matches: [{ id: "final", round: 1, position: 0, participants: [{ id: "a", name: "Ana" }, { id: "b", name: "Bia" }], status: "ready" }] }] },
+    }));
+    render(<TennisTournamentWorkspace />);
+    await user.click(screen.getByRole("button", { name: "Cancelar campeonato" }));
+    await user.click(screen.getByRole("button", { name: "Confirmar cancelamento" }));
+    const archive = JSON.parse(window.localStorage.getItem(TENNIS_STORAGE_KEYS.tournamentHistoryV1) ?? "[]") as Array<{ status: string; activeMatch?: unknown }>;
+    expect(archive[0]).toMatchObject({ status: "cancelled" });
+    expect(archive[0].activeMatch).toBeUndefined();
+    expect(JSON.parse(window.localStorage.getItem(TENNIS_STORAGE_KEYS.matchHistoryV1) ?? "[]")).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "Iniciar novo campeonato" }));
+    expect(screen.getByLabelText("Participantes")).toBeInTheDocument();
+    expect(screen.getByText(/Copa · Cancelado/)).toBeInTheDocument();
   });
 
   it("advances the second semifinal winner without restoring the first match score", async () => {
