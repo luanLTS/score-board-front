@@ -27,12 +27,12 @@ describe("createTennisEliminationBracket", () => {
     expect(firstRound.some(({ participants: pair }) => pair[0]?.id === "p3" && pair[1] === null)).toBe(true);
   });
 
-  it.each([5, 6])("resolves all byes for %i participants", (count) => {
+  it.each([5, 6])("keeps the final pending while earlier matches can still provide a winner for %i participants", (count) => {
     const bracket = createTennisEliminationBracket(participants(count));
 
-    expect(bracket.rounds.flatMap((round) => round.matches).some((match) =>
-      match.participants.filter(Boolean).length === 1 && match.status !== "finished",
-    )).toBe(false);
+    expect(bracket.rounds.at(-1)?.matches[0].status).toBe("pending");
+    expect(bracket.rounds[0].matches.filter((game) => game.participants.filter(Boolean).length === 1)
+      .every((game) => game.status === "finished")).toBe(true);
   });
 
   it("resolves a bye created after the first-round winner advances for six participants", () => {

@@ -140,3 +140,18 @@ export const recordEliminationWinner = (
     status: finished ? "finished" : "elimination_in_progress",
   };
 };
+
+export const reopenPrematureTennisFinal = (tournament: TennisTournamentState): TennisTournamentState => {
+  if (tournament.phase !== "elimination" || tournament.status === "cancelled" || !tournament.eliminationBracket) return tournament;
+  const final = tournament.eliminationBracket.rounds.at(-1)?.matches[0];
+  if (final?.status !== "finished" || final.participants.every((participant) => participant !== null)) return tournament;
+
+  const restored = clone(tournament);
+  const restoredFinal = restored.eliminationBracket!.rounds.at(-1)!.matches[0];
+  restoredFinal.status = "pending";
+  delete restoredFinal.winnerId;
+  restored.status = "elimination_in_progress";
+  delete restored.terminalAt;
+  restored.eliminationBracket = resolveTennisByes(restored.eliminationBracket!);
+  return restored;
+};

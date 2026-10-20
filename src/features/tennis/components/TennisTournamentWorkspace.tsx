@@ -15,6 +15,7 @@ import {
   startEliminationPhase,
   startQualifyingTurn,
   recordEliminationWinner,
+  reopenPrematureTennisFinal,
 } from "../tournament/state";
 import type { TennisQualifyingMatch, TennisTournamentState } from "../tournament/types";
 import type { BracketMatch } from "../../tournaments/types";
@@ -43,8 +44,14 @@ export function TennisTournamentWorkspace() {
   const storage = useMemo(() => createTennisTournamentStorage(), []);
   const archive = useMemo(() => createTennisTournamentHistoryStorage(), []);
   const matchHistory = useMemo(() => createTennisHistoryStorage(), []);
-  const [tournament, setTournament] = useState<TennisTournamentState | null>(() => storage.load());
+  const [tournament, setTournament] = useState<TennisTournamentState | null>(() => {
+    const saved = storage.load();
+    return saved ? reopenPrematureTennisFinal(saved) : null;
+  });
   const [archived, setArchived] = useState(() => archive.list());
+  const visibleArchive = tournament && tournament.status !== "finished" && tournament.status !== "cancelled"
+    ? archived.filter((item) => item.id !== tournament.id)
+    : archived;
   const [activeMatch, setActiveMatch] = useState<SuperTiebreakState | TennisMatchState | null>(() => tournament?.activeMatch ?? null);
   const [activeMatchId, setActiveMatchId] = useState<string | null>(() => tournament?.activeMatchId ?? null);
   const [error, setError] = useState<string | null>(null);
@@ -173,7 +180,7 @@ export function TennisTournamentWorkspace() {
     return (
       <div className="space-y-4">
         <TournamentForm onSubmit={startTournament} />
-        {archived.length > 0 ? <TennisTournamentArchive items={archived} /> : null}
+        {visibleArchive.length > 0 ? <TennisTournamentArchive items={visibleArchive} /> : null}
       </div>
     );
   }
@@ -225,7 +232,7 @@ export function TennisTournamentWorkspace() {
         onNew={() => { setTournament(null); setActiveMatch(null); setActiveMatchId(null); }}
         tournament={tournament}
       />
-      {archived.length > 0 ? <TennisTournamentArchive items={archived} /> : null}
+      {visibleArchive.length > 0 ? <TennisTournamentArchive items={visibleArchive} /> : null}
       {confirmCancel ? (
         <div role="alertdialog" aria-label="Confirmar cancelamento" className="rounded-lg border border-red-400/50 bg-zinc-950 p-4">
           <p>Cancelar o torneio? Resultados concluídos permanecem no histórico; a partida em andamento será descartada.</p>

@@ -4,6 +4,9 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { TennisTournamentWorkspace } from "./TennisTournamentWorkspace";
 import { TENNIS_STORAGE_KEYS } from "../../../lib/storage";
+import { createTennisEliminationBracket } from "../tournament/bracketAdapter";
+import { createTennisTournament } from "../tournament/state";
+import { advanceBracketWinner } from "../../tournaments/utils/bracket";
 
 describe("TennisTournamentWorkspace", () => {
   beforeEach(() => window.localStorage.clear());
@@ -216,5 +219,100 @@ describe("TennisTournamentWorkspace", () => {
     expect(screen.getByRole("button", { name: "Jogar confronto" })).toBeInTheDocument();
     expect(screen.getAllByText("Ana", { exact: true }).length).toBeGreaterThan(1);
     expect(screen.getAllByText("Bia", { exact: true }).length).toBeGreaterThan(1);
+  });
+
+  it("finishes a five-player tournament only after all four elimination matches", async () => {
+    const user = userEvent.setup();
+    const ids = ["a", "b", "c", "d", "e"];
+    const names = ["Ana", "Bia", "Carlos", "Davi", "Eva"];
+    const created = createTennisTournament("Copa cinco", ids);
+    const participants = created.participants.map((participant, index) => ({ ...participant, name: names[index] }));
+    window.localStorage.setItem(TENNIS_STORAGE_KEYS.currentTournamentV1, JSON.stringify({
+      ...created,
+      phase: "elimination",
+      status: "elimination_in_progress",
+      participants,
+      eliminationBracket: createTennisEliminationBracket(participants),
+    }));
+
+    render(<TennisTournamentWorkspace />);
+
+    for (const [index, winner] of ["Ana", "Bia", "Ana", "Ana"].entries()) {
+      await user.click(screen.getAllByRole("button", { name: "Jogar confronto" })[0]);
+      for (let point = 0; point < 8; point += 1) {
+        await user.click(screen.getByRole("button", { name: `Ponto para ${winner}` }));
+      }
+
+      const saved = JSON.parse(window.localStorage.getItem(TENNIS_STORAGE_KEYS.currentTournamentV1) ?? "null") as {
+        status: string;
+        eliminationBracket: { rounds: Array<{ matches: Array<{ status: string }> }> };
+      };
+      expect(saved.status).toBe(index === 3 ? "finished" : "elimination_in_progress");
+      expect(saved.eliminationBracket.rounds[2].matches[0].status).toBe(index === 3 ? "finished" : index === 2 ? "ready" : "pending");
+      if (index < 3) expect(screen.getByText("Eliminatórias")).toBeInTheDocument();
+    }
+
+    expect(screen.getByText("Finalizado")).toBeInTheDocument();
+    const matchHistory = JSON.parse(window.localStorage.getItem(TENNIS_STORAGE_KEYS.matchHistoryV1) ?? "[]") as unknown[];
+    expect(matchHistory).toHaveLength(4);
+    await waitFor(() => {
+      const archive = JSON.parse(window.localStorage.getItem(TENNIS_STORAGE_KEYS.tournamentHistoryV1) ?? "[]") as unknown[];
+      expect(archive).toHaveLength(1);
+    });
+  });
+
+  it("reopens a saved five-player tournament whose final was finished by a premature bye", async () => {
+    const user = userEvent.setup();
+    const ids = ["a", "b", "c", "d", "e"];
+    const names = ["Ana", "Bia", "Carlos", "Davi", "Eva"];
+    const created = createTennisTournament("Copa cinco", ids);
+    const participants = created.participants.map((participant, index) => ({ ...participant, name: names[index] }));
+    const bracket = advanceBracketWinner(createTennisEliminationBracket(participants), "tennis-round-1-match-1", "a");
+    const prematureBracket = structuredClone(bracket);
+    prematureBracket.rounds[2].matches[0].status = "finished";
+    prematureBracket.rounds[2].matches[0].winnerId = "c";
+    const saved = {
+      ...created,
+      phase: "elimination",
+      status: "finished",
+      terminalAt: "2026-10-19T12:00:00Z",
+      participants,
+      eliminationBracket: prematureBracket,
+    };
+    window.localStorage.setItem(TENNIS_STORAGE_KEYS.currentTournamentV1, JSON.stringify(saved));
+    window.localStorage.setItem(TENNIS_STORAGE_KEYS.tournamentHistoryV1, JSON.stringify([saved]));
+
+    render(<TennisTournamentWorkspace />);
+
+    expect(screen.getByText("Eliminatórias")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Jogar confronto" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Histórico de torneios" })).not.toBeInTheDocument();
+    await waitFor(() => {
+      const restored = JSON.parse(window.localStorage.getItem(TENNIS_STORAGE_KEYS.currentTournamentV1) ?? "null") as {
+        status: string;
+        eliminationBracket: { rounds: Array<{ matches: Array<{ status: string; winnerId?: string }> }> };
+      };
+      expect(restored.status).toBe("elimination_in_progress");
+      expect(restored.eliminationBracket.rounds[0].matches[0].winnerId).toBe("a");
+      expect(restored.eliminationBracket.rounds[2].matches[0].status).toBe("pending");
+    });
+
+    for (const winner of ["Bia", "Ana", "Ana"]) {
+      await user.click(screen.getByRole("button", { name: "Jogar confronto" }));
+      for (let point = 0; point < 8; point += 1) {
+        await user.click(screen.getByRole("button", { name: `Ponto para ${winner}` }));
+      }
+    }
+
+    expect(screen.getByText("Finalizado")).toBeInTheDocument();
+    await waitFor(() => {
+      const archive = JSON.parse(window.localStorage.getItem(TENNIS_STORAGE_KEYS.tournamentHistoryV1) ?? "[]") as Array<{
+        status: string;
+        eliminationBracket: { rounds: Array<{ matches: Array<{ participants: unknown[] }> }> };
+      }>;
+      expect(archive).toHaveLength(1);
+      expect(archive[0].status).toBe("finished");
+      expect(archive[0].eliminationBracket.rounds[2].matches[0].participants.every(Boolean)).toBe(true);
+    });
   });
 });

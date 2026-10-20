@@ -22,22 +22,24 @@ export const resolveTennisByes = (initialBracket: TournamentBracket): Tournament
   let resolvedBye = true;
   while (resolvedBye) {
     resolvedBye = false;
-    for (const round of bracket.rounds) {
-      for (const match of round.matches) {
-        const available = match.participants.filter((participant): participant is TournamentParticipant => participant !== null);
-        const incomingMatches = bracket.rounds
-          .flatMap((candidateRound) => candidateRound.matches)
-          .filter((candidate) => candidate.nextMatchId === match.id);
-        const isFirstRound = round.number === bracket.rounds[0]?.number;
-        const allIncomingMatchesResolved = incomingMatches.length > 0 && incomingMatches.every((candidate) =>
-          candidate.status === "finished" || candidate.participants.every((participant) => participant === null),
-        );
+    const matches = bracket.rounds.flatMap((round) => round.matches);
+    const incomingMatches = (matchId: string) => matches.filter((candidate) => candidate.nextMatchId === matchId);
+    const canProvideWinner = (match: BracketMatch): boolean =>
+      match.participants.some((participant) => participant !== null) || incomingMatches(match.id).some(canProvideWinner);
 
-        if (available.length === 1 && match.status !== "finished" && (isFirstRound || allIncomingMatchesResolved)) {
-          bracket = advanceBracketWinner(bracket, match.id, available[0].id);
-          resolvedBye = true;
-        }
-      }
+    for (const match of matches) {
+      const available = match.participants.filter((participant): participant is TournamentParticipant => participant !== null);
+      if (available.length !== 1 || match.status === "finished") continue;
+
+      const emptySlot = match.participants[0] === null ? 0 : 1;
+      const opponentCanArrive = incomingMatches(match.id).some((candidate) =>
+        candidate.nextParticipantSlot === emptySlot && canProvideWinner(candidate),
+      );
+      if (opponentCanArrive) continue;
+
+      bracket = advanceBracketWinner(bracket, match.id, available[0].id);
+      resolvedBye = true;
+      break;
     }
   }
   return bracket;
