@@ -96,11 +96,7 @@ describe("App phase 3 persistence and history", () => {
 
     await user.click(screen.getByRole("button", { name: "Torneio" }));
     await user.type(screen.getByLabelText("Nome do torneio"), "Copa local");
-    const participantInput = screen.getByLabelText("Nome do participante");
-    await user.type(participantInput, "Ana");
-    await user.click(screen.getByRole("button", { name: "Adicionar" }));
-    await user.type(participantInput, "Bia");
-    await user.click(screen.getByRole("button", { name: "Adicionar" }));
+    await user.type(screen.getByLabelText("Participantes separados por vírgula"), "Ana, Bia");
     await user.click(screen.getByRole("button", { name: "Criar torneio" }));
 
     expect(screen.getByRole("heading", { name: "Copa local" })).toBeInTheDocument();
@@ -166,6 +162,38 @@ describe("App phase 3 persistence and history", () => {
       "aria-current",
       "page",
     );
-    expect(screen.getByRole("heading", { name: "Tênis" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Partidas" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Torneio" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ranking" })).toBeInTheDocument();
+  });
+
+  it("keeps the same match history column in both Placar and Tênis", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const scoreboardAside = screen.getByRole("complementary");
+    expect(scoreboardAside).toHaveAttribute("aria-label", "Histórico da partida");
+    const scoreboardClass = scoreboardAside.className;
+
+    await user.click(screen.getByRole("button", { name: "Tênis" }));
+    const tennisAside = screen.getByRole("complementary");
+    expect(tennisAside).toHaveAttribute("aria-label", "Histórico da partida");
+    expect(tennisAside.className).toBe(scoreboardClass);
+  });
+
+  it("remembers the selected tennis section when switching areas", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Ranking" }));
+    await user.click(screen.getByRole("button", { name: "Tênis" }));
+    await user.click(screen.getByRole("button", { name: "Torneio" }));
+    await user.click(screen.getByRole("button", { name: "Placar" }));
+    expect(screen.getByRole("button", { name: "Ranking" })).toHaveAttribute("aria-current", "page");
+
+    await user.click(screen.getByRole("button", { name: "Tênis" }));
+
+    expect(screen.getByRole("button", { name: "Torneio" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByLabelText("Participantes separados por vírgula")).toBeInTheDocument();
   });
 });

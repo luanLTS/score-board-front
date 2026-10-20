@@ -6,7 +6,7 @@ const item = (id: string, terminalAt: string, status: "finished" | "cancelled" =
   currentTurn: 0, turns: [], ranking: [{ participantId: "a", wins: 0, pointDifferential: 0 }, { participantId: "b", wins: 0, pointDifferential: 0 }],
 });
 
-describe("tennis championship archive", () => {
+describe("tennis tournament archive", () => {
   it("filters invalid/active entries and sorts newest first", () => {
     expect(parseTennisTournamentHistory([item("old", "2026-01-01"), item("new", "2026-02-01", "cancelled"), { nope: true }]).map(({ id }) => id)).toEqual(["new", "old"]);
   });

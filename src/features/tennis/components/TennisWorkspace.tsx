@@ -5,37 +5,32 @@ import { createSuperTiebreakMatch } from "../matchFactory";
 import { createTennisMatchStorage } from "../matchFactory";
 import { createTennisHistoryRecord, createTennisHistoryStorage } from "../persistence/tennisHistory";
 import { tennisHistoryToFinishedMatch } from "../persistence/tennisHistory";
-import { calculateRanking } from "../../stats/utils/ranking";
-import { calculatePlayerStats } from "../../stats/utils/playerStats";
-import { RankingList } from "../../stats/components/RankingList";
-import { PlayerStatsPanel } from "../../stats/components/PlayerStatsPanel";
-import { HistoryList } from "../../history/components/HistoryList";
-import { MatchDetails } from "../../history/components/MatchDetails";
+import { StatsView } from "../../stats/components/StatsView";
+import { MatchWorkspaceLayout } from "../../matches/components/MatchWorkspaceLayout";
 import type { SuperTiebreakState } from "../domain/types";
 
 import { TennisMatchView } from "./TennisMatchView";
 import { TennisMatchSetup } from "./TennisMatchSetup";
 import { TennisTournamentWorkspace } from "./TennisTournamentWorkspace";
 
+export type TennisWorkspaceSection = "match" | "ranking" | "tournament";
+
 type TennisWorkspaceProps = {
-  onSelect?: (section: "match" | "ranking" | "tournament") => void;
+  section?: TennisWorkspaceSection;
+  onSelect?: (section: TennisWorkspaceSection) => void;
 };
 
-export function TennisWorkspace({ onSelect }: TennisWorkspaceProps) {
+export function TennisWorkspace({ section, onSelect }: TennisWorkspaceProps) {
   const matchStorage = useMemo(() => createTennisMatchStorage(), []);
   const historyStorage = useMemo(() => createTennisHistoryStorage(), []);
   const [history, setHistory] = useState(() => historyStorage.list());
   const restoredMatch = useMemo(() => matchStorage.load(), [matchStorage]);
-  const [activeSection, setActiveSection] = useState<"match" | "ranking" | "tournament" | null>(null);
+  const [localActiveSection, setLocalActiveSection] = useState<TennisWorkspaceSection>("match");
+  const activeSection = section ?? localActiveSection;
   const [match, setMatch] = useState<SuperTiebreakState | null>(restoredMatch);
   const [participantNames, setParticipantNames] = useState<Record<string, string>>(restoredMatch?.participantNames ?? {});
-  const [selectedHistoryId, setSelectedHistoryId] = useState<string | undefined>();
-  const [selectedPlayerKey, setSelectedPlayerKey] = useState<string>();
+  const [selectedHistoryId, setSelectedHistoryId] = useState<string | undefined>(() => historyStorage.list()[0]?.id);
   const tennisMatches = history.map(tennisHistoryToFinishedMatch);
-  const ranking = calculateRanking(tennisMatches);
-  const stats = calculatePlayerStats(tennisMatches);
-  const selectedStats = stats.find(({ playerKey }) => playerKey === selectedPlayerKey) ?? stats[0];
-  const selectedHistoryRecord = history.find(({ id }) => id === selectedHistoryId);
   const historyId = useRef(restoredMatch ? `restored-${restoredMatch.firstServerId}-${restoredMatch.participants.join("-")}` : null);
 
   useEffect(() => {
@@ -54,100 +49,114 @@ export function TennisWorkspace({ onSelect }: TennisWorkspaceProps) {
       finishedAt: new Date(),
     }));
     setHistory(historyStorage.list());
+    setSelectedHistoryId(historyId.current);
   }, [historyStorage, match, participantNames]);
   useEffect(() => {
-    if (activeSection === "ranking") setHistory(historyStorage.list());
+    if (activeSection === "match" || activeSection === "ranking") {
+      const latestHistory = historyStorage.list();
+      setHistory(latestHistory);
+      setSelectedHistoryId(latestHistory[0]?.id);
+    }
   }, [activeSection, historyStorage]);
-  const selectSection = (section: "match" | "ranking" | "tournament") => {
-    setActiveSection(section);
-    onSelect?.(section);
+  const selectSection = (nextSection: TennisWorkspaceSection) => {
+    if (section === undefined) setLocalActiveSection(nextSection);
+    onSelect?.(nextSection);
   };
 
+  const selectedRecord = history.find(({ id }) => id === selectedHistoryId) ?? null;
+
   return (
-    <section aria-labelledby="tennis-workspace-title" className="space-y-6 rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
-      <header className="space-y-2">
-        <p className="text-sm font-medium uppercase text-amber-300">Workspace</p>
-        <h1 className="text-3xl font-bold" id="tennis-workspace-title">Tênis</h1>
-        <p className="text-sm text-zinc-400">Partidas, ranking e campeonatos de tênis.</p>
-      </header>
-      <div className="grid gap-3 sm:grid-cols-3">
+    <div className="space-y-6">
+      <nav aria-label="Seções" className="grid grid-cols-3 rounded-lg border border-zinc-800 bg-zinc-900/60 p-1">
         <button
-          className="rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-4 text-left font-semibold text-zinc-100 transition hover:border-amber-300/70"
+          aria-current={activeSection === "match" ? "page" : undefined}
+          className={`flex-1 rounded-md px-4 py-2 text-sm font-semibold ${activeSection === "match" ? "bg-teal-300 text-zinc-950" : "text-zinc-300"}`}
           onClick={() => selectSection("match")}
           type="button"
         >
-          Partida
+          Partidas
         </button>
         <button
-          className="rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-4 text-left font-semibold text-zinc-100 transition hover:border-amber-300/70"
+          aria-current={activeSection === "tournament" ? "page" : undefined}
+          className={`flex-1 rounded-md px-4 py-2 text-sm font-semibold ${activeSection === "tournament" ? "bg-amber-300 text-zinc-950" : "text-zinc-300"}`}
+          onClick={() => selectSection("tournament")}
+          type="button"
+        >
+          Torneio
+        </button>
+        <button
+          aria-current={activeSection === "ranking" ? "page" : undefined}
+          className={`rounded-md px-2 py-2 text-sm font-semibold sm:px-4 ${activeSection === "ranking" ? "bg-violet-300 text-zinc-950" : "text-zinc-300"}`}
           onClick={() => selectSection("ranking")}
           type="button"
         >
           Ranking
         </button>
-        <button
-          className="rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-4 text-left font-semibold text-zinc-100 transition hover:border-amber-300/70"
-          onClick={() => selectSection("tournament")}
-          type="button"
-        >
-          Campeonato
-        </button>
-      </div>
+      </nav>
 
       {activeSection === "match" ? (
-        match ? (
-          <div className="space-y-3">
-            <TennisMatchView
-              match={match}
-              participantNames={participantNames}
-              onPoint={(participantId) => setMatch(advanceSuperTiebreak(match, participantId))}
+        <MatchWorkspaceLayout
+          detailsExtra={selectedRecord ? [
+            ...(selectedRecord.tournamentName ? [`Torneio: ${selectedRecord.tournamentName}`] : []),
+            ...(selectedRecord.roundLabel ? [`Fase: ${selectedRecord.roundLabel}`] : []),
+            ...(selectedRecord.games ?? []).map((game, index) => `Game ${index + 1}: ${game.points[0]} × ${game.points[1]}`),
+          ] : []}
+          detailsFormatLabel={selectedRecord ? (selectedRecord.format === "super_tiebreak" ? "Super tie-break" : "Melhor de 3 games") : undefined}
+          getFormatLabel={(finishedMatch) => {
+            const record = history.find(({ id }) => id === finishedMatch.id)!;
+            const format = record.format === "super_tiebreak" ? "Super tie-break" : "Melhor de 3 games";
+            return `Tênis · ${format}${record.tournamentName ? ` · ${record.tournamentName}` : ""}`;
+          }}
+          matches={tennisMatches}
+          onSelectMatch={setSelectedHistoryId}
+          selectedMatch={selectedRecord ? tennisHistoryToFinishedMatch(selectedRecord) : null}
+          selectedMatchId={selectedHistoryId}
+        >
+          {match ? (
+            <div className="space-y-3">
+              <TennisMatchView match={match} participantNames={participantNames} onPoint={(participantId) => setMatch(advanceSuperTiebreak(match, participantId))} />
+              <button className="rounded-md border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200" onClick={() => setMatch(null)} type="button">Nova partida</button>
+            </div>
+          ) : (
+            <TennisMatchSetup
+              onStart={({ first, second }) => {
+                historyId.current = `tennis-match-${Date.now()}`;
+                setParticipantNames({ "player-1": first, "player-2": second });
+                setMatch({
+                  ...createSuperTiebreakMatch(["player-1", "player-2"]),
+                  participantNames: { "player-1": first, "player-2": second },
+                });
+              }}
             />
-            <button
-              className="rounded-md border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200"
-              onClick={() => setMatch(null)}
-              type="button"
-            >
-              Nova partida
-            </button>
-          </div>
-        ) : (
-          <TennisMatchSetup
-            onStart={({ first, second }) => {
-              historyId.current = `tennis-match-${Date.now()}`;
-              setParticipantNames({ "player-1": first, "player-2": second });
-              setMatch({
-                ...createSuperTiebreakMatch(["player-1", "player-2"]),
-                participantNames: { "player-1": first, "player-2": second },
-              });
-            }}
-          />
-        )
+          )}
+        </MatchWorkspaceLayout>
       ) : null}
 
       {activeSection === "ranking" ? (
-        <section className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-4">
-          <h2 className="text-xl font-bold">Ranking geral do tênis</h2>
-        <RankingList entries={ranking} />
-        <PlayerStatsPanel players={ranking} stats={selectedStats} onSelectPlayer={setSelectedPlayerKey} />
-        <div className="mt-6 grid gap-5 lg:grid-cols-2">
-          <HistoryList matches={tennisMatches} selectedMatchId={selectedHistoryId} onSelectMatch={setSelectedHistoryId} getFormatLabel={(match) => {
-            const record = history.find(({ id }) => id === match.id)!;
-            return `${record.format === "super_tiebreak" ? "Super tie-break" : "Melhor de 3 games"}${record.tournamentName ? ` · ${record.tournamentName}` : ""}`;
-          }} />
-          <MatchDetails match={selectedHistoryRecord ? tennisHistoryToFinishedMatch(selectedHistoryRecord) : null}
-            formatLabel={selectedHistoryRecord ? (selectedHistoryRecord.format === "super_tiebreak" ? "Super tie-break" : "Melhor de 3 games") : undefined}
-            extraDetails={selectedHistoryRecord ? [
-              ...(selectedHistoryRecord.tournamentName ? [`Campeonato: ${selectedHistoryRecord.tournamentName}`] : []),
-              ...(selectedHistoryRecord.roundLabel ? [`Fase: ${selectedHistoryRecord.roundLabel}`] : []),
-              ...(selectedHistoryRecord.games ?? []).map((game, index) => `Game ${index + 1}: ${game.points[0]} × ${game.points[1]}`),
-            ] : []} />
-        </div>
-        </section>
+        <StatsView matches={tennisMatches} />
       ) : null}
 
       {activeSection === "tournament" ? (
-        <TennisTournamentWorkspace />
+        <MatchWorkspaceLayout
+          detailsExtra={selectedRecord ? [
+            ...(selectedRecord.tournamentName ? [`Torneio: ${selectedRecord.tournamentName}`] : []),
+            ...(selectedRecord.roundLabel ? [`Fase: ${selectedRecord.roundLabel}`] : []),
+            ...(selectedRecord.games ?? []).map((game, index) => `Game ${index + 1}: ${game.points[0]} × ${game.points[1]}`),
+          ] : []}
+          detailsFormatLabel={selectedRecord ? (selectedRecord.format === "super_tiebreak" ? "Super tie-break" : "Melhor de 3 games") : undefined}
+          getFormatLabel={(finishedMatch) => {
+            const record = history.find(({ id }) => id === finishedMatch.id)!;
+            const format = record.format === "super_tiebreak" ? "Super tie-break" : "Melhor de 3 games";
+            return `Tênis · ${format}${record.tournamentName ? ` · ${record.tournamentName}` : ""}`;
+          }}
+          matches={tennisMatches}
+          onSelectMatch={setSelectedHistoryId}
+          selectedMatch={selectedRecord ? tennisHistoryToFinishedMatch(selectedRecord) : null}
+          selectedMatchId={selectedHistoryId}
+        >
+          <TennisTournamentWorkspace />
+        </MatchWorkspaceLayout>
       ) : null}
-    </section>
+    </div>
   );
 }

@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { HistoryList } from "../features/history/components/HistoryList";
-import { MatchDetails } from "../features/history/components/MatchDetails";
 import { createHistoryStorage } from "../features/history/persistence/historyStorage";
 import { CurrentMatchView } from "../features/matches/components/CurrentMatchView";
+import { MatchWorkspaceLayout } from "../features/matches/components/MatchWorkspaceLayout";
 import { NewMatchForm } from "../features/matches/components/NewMatchForm";
 import { useCurrentMatch } from "../features/matches/hooks/useCurrentMatch";
 import type { FinishedMatch } from "../features/matches/types";
@@ -14,7 +13,7 @@ import {
 } from "../features/matches/utils/matchLifecycle";
 import { createScoreboardStorage } from "../features/scoreboard/persistence/scoreboardStorage";
 import { StatsView } from "../features/stats/components/StatsView";
-import { TennisWorkspace } from "../features/tennis/components/TennisWorkspace";
+import { TennisWorkspace, type TennisWorkspaceSection } from "../features/tennis/components/TennisWorkspace";
 import { TournamentForm } from "../features/tournaments/components/TournamentForm";
 import { TournamentView } from "../features/tournaments/components/TournamentView";
 import { useTournament } from "../features/tournaments/hooks/useTournament";
@@ -22,6 +21,7 @@ import { useTournament } from "../features/tournaments/hooks/useTournament";
 export function App() {
   const [area, setArea] = useState<"scoreboard" | "tennis">("scoreboard");
   const [section, setSection] = useState<"matches" | "tournament" | "stats">("matches");
+  const [tennisSection, setTennisSection] = useState<TennisWorkspaceSection>("match");
   const [activeBracketMatchId, setActiveBracketMatchId] = useState<string | null>(null);
   const historyStorage = useMemo(() => createHistoryStorage(), []);
   const scoreboardStorage = useMemo(() => createScoreboardStorage(), []);
@@ -135,7 +135,7 @@ export function App() {
         </nav>
 
         {area === "tennis" ? (
-          <TennisWorkspace />
+          <TennisWorkspace section={tennisSection} onSelect={setTennisSection} />
         ) : (
           <>
             <nav aria-label="Seções" className="grid grid-cols-3 rounded-lg border border-zinc-800 bg-zinc-900/60 p-1">
@@ -168,8 +168,12 @@ export function App() {
             {section === "stats" ? (
               <StatsView matches={matches} />
             ) : (
-              <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-                <div>
+              <MatchWorkspaceLayout
+                matches={matches}
+                onSelectMatch={(matchId) => setHistoryState((state) => ({ ...state, selectedMatchId: matchId }))}
+                selectedMatch={selectedMatch}
+                selectedMatchId={selectedMatchId}
+              >
                   {section === "tournament" && !activeBracketMatchId ? (
                     tournament ? (
                       <TournamentView
@@ -218,18 +222,7 @@ export function App() {
                       }}
                     />
                   )}
-                </div>
-                <aside className="space-y-4">
-                  <HistoryList
-                    matches={matches}
-                    onSelectMatch={(matchId) =>
-                      setHistoryState((state) => ({ ...state, selectedMatchId: matchId }))
-                    }
-                    selectedMatchId={selectedMatchId}
-                  />
-                  <MatchDetails match={selectedMatch} />
-                </aside>
-              </div>
+              </MatchWorkspaceLayout>
             )}
           </>
         )}

@@ -18,6 +18,7 @@ import {
 } from "../tournament/state";
 import type { TennisQualifyingMatch, TennisTournamentState } from "../tournament/types";
 import type { BracketMatch } from "../../tournaments/types";
+import { TournamentForm, type TournamentFormValues } from "../../tournaments/components/TournamentForm";
 
 import { TennisMatchView } from "./TennisMatchView";
 import { TennisTournamentView } from "./TennisTournamentView";
@@ -25,8 +26,8 @@ import { TennisTournamentView } from "./TennisTournamentView";
 const participantIds = (tournament: TennisTournamentState) => tournament.participants.map(({ id }) => id);
 
 function TennisTournamentArchive({ items }: { items: ReturnType<ReturnType<typeof createTennisTournamentHistoryStorage>["list"]> }) {
-  return <section aria-label="Histórico de campeonatos" className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
-    <h3 className="text-lg font-bold">Histórico de campeonatos</h3>
+  return <section aria-label="Histórico de torneios" className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
+    <h3 className="text-lg font-bold">Histórico de torneios</h3>
     {items.length ? items.map((item) => (
       <details className="rounded border border-zinc-800 p-3" key={item.id}>
         <summary>{item.name} · {item.status === "finished" ? "Finalizado" : "Cancelado"} · {new Date(item.terminalAt).toLocaleDateString("pt-BR")}</summary>
@@ -34,7 +35,7 @@ function TennisTournamentArchive({ items }: { items: ReturnType<ReturnType<typeo
         <p className="text-sm">Partidas classificatórias concluídas: {item.turns.flatMap(({ matches }) => matches).filter(({ status }) => status === "finished").length}</p>
         {item.eliminationBracket ? <ul className="mt-2 space-y-1 text-sm">{item.eliminationBracket.rounds.flatMap((round) => round.matches).map((match) => <li key={match.id}>{match.participants.map((participant) => participant?.name ?? "A definir").join(" × ")}{match.status === "finished" ? ` · Vencedor: ${item.participants.find(({ id }) => id === match.winnerId)?.name ?? "não definido"}` : " · Não concluída"}</li>)}</ul> : null}
       </details>
-    )) : <p className="text-sm text-zinc-400">Ainda não há campeonatos no histórico.</p>}
+    )) : <p className="text-sm text-zinc-400">Ainda não há torneios no histórico.</p>}
   </section>;
 }
 
@@ -44,7 +45,6 @@ export function TennisTournamentWorkspace() {
   const matchHistory = useMemo(() => createTennisHistoryStorage(), []);
   const [tournament, setTournament] = useState<TennisTournamentState | null>(() => storage.load());
   const [archived, setArchived] = useState(() => archive.list());
-  const [participantText, setParticipantText] = useState("Ana, Bia, Carlos, Davi");
   const [activeMatch, setActiveMatch] = useState<SuperTiebreakState | TennisMatchState | null>(() => tournament?.activeMatch ?? null);
   const [activeMatchId, setActiveMatchId] = useState<string | null>(() => tournament?.activeMatchId ?? null);
   const [error, setError] = useState<string | null>(null);
@@ -64,14 +64,10 @@ export function TennisTournamentWorkspace() {
     else storage.clear();
   }, [storage, tournament]);
 
-  const startChampionship = () => {
-    const names = participantText.split(",").map((name) => name.trim()).filter(Boolean);
-    if (names.length < 2) {
-      setError("Informe pelo menos dois participantes.");
-      return;
-    }
+  const startTournament = ({ name, participants }: TournamentFormValues) => {
+    const names = participants.map((participant) => participant.name);
     const ids = names.map((_, index) => `tennis-player-${index + 1}`);
-    const created = createTennisTournament("Campeonato de tênis", ids);
+    const created = createTennisTournament(name, ids);
     const withNames = {
       ...created,
       participants: created.participants.map((participant, index) => ({ ...participant, name: names[index] })),
@@ -175,16 +171,10 @@ export function TennisTournamentWorkspace() {
 
   if (!tournament) {
     return (
-      <section className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
-        <h2 className="text-2xl font-bold">Campeonato de tênis</h2>
-        <label className="block text-sm text-zinc-300" htmlFor="tennis-participants">
-          Participantes
-          <input className="mt-1 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2" id="tennis-participants" onChange={(event) => setParticipantText(event.target.value)} value={participantText} />
-        </label>
-        {error ? <p role="alert" className="text-sm text-red-300">{error}</p> : null}
-        <button className="rounded-md bg-amber-300 px-4 py-3 font-bold text-zinc-950" onClick={startChampionship} type="button">Iniciar campeonato</button>
-        <TennisTournamentArchive items={archived} />
-      </section>
+      <div className="space-y-4">
+        <TournamentForm onSubmit={startTournament} />
+        {archived.length > 0 ? <TennisTournamentArchive items={archived} /> : null}
+      </div>
     );
   }
 
@@ -207,15 +197,7 @@ export function TennisTournamentWorkspace() {
             } else updateActiveMatch(advanceSuperTiebreak(activeMatch, participantId));
           }}
         />
-        <button className="rounded-md border border-zinc-700 px-4 py-2 text-sm font-semibold" onClick={() => { setActiveMatch(null); setActiveMatchId(null); }} type="button">Voltar ao campeonato</button>
-        <button className="rounded-md border border-red-400 px-4 py-2 text-sm text-red-200" onClick={() => setConfirmCancel(true)} type="button">Cancelar campeonato</button>
-        {confirmCancel ? <div role="alertdialog" aria-label="Confirmar cancelamento" className="rounded-lg border border-red-400/50 bg-zinc-950 p-4">
-          <p>Cancelar o campeonato? Resultados concluídos permanecem no histórico; a partida em andamento será descartada.</p>
-          <div className="mt-3 flex gap-2">
-            <button type="button" onClick={() => { const cancelled = { ...tournament, status: "cancelled" as const, activeMatch: undefined, activeMatchId: undefined, terminalAt: new Date() }; archive.archive(cancelled); setArchived(archive.list()); setTournament(cancelled); setActiveMatch(null); setActiveMatchId(null); setConfirmCancel(false); }}>Confirmar cancelamento</button>
-            <button type="button" onClick={() => setConfirmCancel(false)}>Continuar campeonato</button>
-          </div>
-        </div> : null}
+        <button className="rounded-md border border-zinc-700 px-4 py-2 text-sm font-semibold" onClick={() => { setActiveMatch(null); setActiveMatchId(null); }} type="button">Voltar ao torneio</button>
       </div>
     );
   }
@@ -243,13 +225,13 @@ export function TennisTournamentWorkspace() {
         onNew={() => { setTournament(null); setActiveMatch(null); setActiveMatchId(null); }}
         tournament={tournament}
       />
-      <TennisTournamentArchive items={archived} />
+      {archived.length > 0 ? <TennisTournamentArchive items={archived} /> : null}
       {confirmCancel ? (
         <div role="alertdialog" aria-label="Confirmar cancelamento" className="rounded-lg border border-red-400/50 bg-zinc-950 p-4">
-          <p>Cancelar o campeonato? Resultados concluídos permanecem no histórico; a partida em andamento será descartada.</p>
+          <p>Cancelar o torneio? Resultados concluídos permanecem no histórico; a partida em andamento será descartada.</p>
           <div className="mt-3 flex gap-2">
             <button type="button" onClick={() => { const cancelled = { ...tournament, status: "cancelled" as const, activeMatch: undefined, activeMatchId: undefined, terminalAt: new Date() }; archive.archive(cancelled); setArchived(archive.list()); setTournament(cancelled); setActiveMatch(null); setActiveMatchId(null); setConfirmCancel(false); }}>Confirmar cancelamento</button>
-            <button type="button" onClick={() => setConfirmCancel(false)}>Continuar campeonato</button>
+            <button type="button" onClick={() => setConfirmCancel(false)}>Continuar torneio</button>
           </div>
         </div>
       ) : null}

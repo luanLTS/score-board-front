@@ -10,11 +10,11 @@ describe("TennisMatchSetup", () => {
     const onStart = vi.fn();
     render(<TennisMatchSetup onStart={onStart} />);
 
-    await user.clear(screen.getByLabelText("Nome do jogador 1"));
-    await user.type(screen.getByLabelText("Nome do jogador 1"), "  Carlos ");
-    await user.clear(screen.getByLabelText("Nome do jogador 2"));
-    await user.type(screen.getByLabelText("Nome do jogador 2"), "Davi");
-    await user.click(screen.getByRole("button", { name: "Iniciar super tie-break" }));
+    await user.clear(screen.getByLabelText("Nome do participante 1"));
+    await user.type(screen.getByLabelText("Nome do participante 1"), "  Carlos ");
+    await user.clear(screen.getByLabelText("Nome do participante 2"));
+    await user.type(screen.getByLabelText("Nome do participante 2"), "Davi");
+    await user.click(screen.getByRole("button", { name: "Iniciar partida" }));
 
     expect(onStart).toHaveBeenCalledWith({ first: "Carlos", second: "Davi" });
   });

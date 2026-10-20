@@ -27,9 +27,9 @@ export const createTennisTournament = (
   id = `tennis-tournament-${Date.now()}`,
 ): TennisTournamentState => {
   const uniqueIds = new Set(participantIds);
-  if (name.trim().length === 0) throw new Error("Informe um nome para o campeonato.");
+  if (name.trim().length === 0) throw new Error("Informe um nome para o torneio.");
   if (participantIds.length < 2 || uniqueIds.size !== participantIds.length) {
-    throw new Error("O campeonato precisa de pelo menos dois participantes únicos.");
+    throw new Error("O torneio precisa de pelo menos dois participantes únicos.");
   }
 
   const participants: TennisTournamentParticipant[] = participantIds.map((participantId) => ({
@@ -127,7 +127,7 @@ export const recordEliminationWinner = (
   winnerId: string,
 ): TennisTournamentState => {
   if (tournament.phase !== "elimination" || tournament.status !== "elimination_in_progress" || !tournament.eliminationBracket) {
-    throw new Error("O campeonato não está nas eliminatórias.");
+    throw new Error("O torneio não está nas eliminatórias.");
   }
 
   const eliminationBracket = advanceBracketWinner(tournament.eliminationBracket, matchId, winnerId);

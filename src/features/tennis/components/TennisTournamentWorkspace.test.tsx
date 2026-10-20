@@ -8,30 +8,55 @@ import { TENNIS_STORAGE_KEYS } from "../../../lib/storage";
 describe("TennisTournamentWorkspace", () => {
   beforeEach(() => window.localStorage.clear());
 
-  it("creates a championship with named participants and opens its first turn", async () => {
+  it("uses the scoreboard tournament form and saves the chosen name", async () => {
     const user = userEvent.setup();
     render(<TennisTournamentWorkspace />);
 
-    await user.clear(screen.getByLabelText("Participantes"));
-    await user.type(screen.getByLabelText("Participantes"), "Ana, Bia, Carlos, Davi");
-    await user.click(screen.getByRole("button", { name: "Iniciar campeonato" }));
+    expect(screen.getByText("Novo torneio")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Monte o chaveamento" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Histórico de torneios" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Criar torneio" })).toBeDisabled();
 
-    expect(screen.getByRole("heading", { name: "Campeonato de tênis" })).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Nome do torneio"), "Copa de tênis");
+    await user.type(screen.getByLabelText("Participantes separados por vírgula"), "Ana, Bia");
+    await user.click(screen.getByRole("button", { name: "Criar torneio" }));
+
+    expect(screen.getByRole("heading", { name: "Copa de tênis" })).toBeInTheDocument();
+    await waitFor(() => {
+      const saved = JSON.parse(window.localStorage.getItem(TENNIS_STORAGE_KEYS.currentTournamentV1) ?? "null") as { name: string };
+      expect(saved.name).toBe("Copa de tênis");
+    });
+  });
+
+  it("creates a tournament with named participants and opens its first turn", async () => {
+    const user = userEvent.setup();
+    render(<TennisTournamentWorkspace />);
+
+    await user.type(screen.getByLabelText("Nome do torneio"), "Copa local");
+    await user.type(screen.getByLabelText("Participantes separados por vírgula"), "Ana, Bia, Carlos, Davi");
+    await user.click(screen.getByRole("button", { name: "Criar torneio" }));
+
+    expect(screen.getByText("Torneio de tênis")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Copa local" })).toBeInTheDocument();
     expect(screen.getByText("Turno 1")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Jogar partida" })).toHaveLength(6);
   });
 
-  it("cancels during an active match, preserves completed matches, and archives the championship", async () => {
+  it("cancels from the tournament screen, preserves completed matches, and archives the tournament", async () => {
     const user = userEvent.setup();
     render(<TennisTournamentWorkspace />);
-    await user.clear(screen.getByLabelText("Participantes"));
-    await user.type(screen.getByLabelText("Participantes"), "Ana, Bia, Carlos, Davi");
-    await user.click(screen.getByRole("button", { name: "Iniciar campeonato" }));
+    await user.type(screen.getByLabelText("Nome do torneio"), "Copa local");
+    await user.type(screen.getByLabelText("Participantes separados por vírgula"), "Ana, Bia, Carlos, Davi");
+    await user.click(screen.getByRole("button", { name: "Criar torneio" }));
     await user.click(screen.getAllByRole("button", { name: "Jogar partida" })[0]);
+    expect(screen.queryByRole("button", { name: /^Cancelar /i })).not.toBeInTheDocument();
     for (let index = 0; index < 10; index += 1) await user.click(screen.getByRole("button", { name: "Ponto para Ana" }));
-    await user.click(screen.getByRole("button", { name: "Voltar ao campeonato" }));
+    await user.click(screen.getByRole("button", { name: "Voltar ao torneio" }));
     await user.click(screen.getAllByRole("button", { name: "Jogar partida" })[0]);
-    await user.click(screen.getByRole("button", { name: "Cancelar campeonato" }));
+    expect(screen.queryByRole("button", { name: /^Cancelar /i })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Voltar ao torneio" }));
+    await user.click(screen.getByRole("button", { name: "Cancelar torneio" }));
+    expect(screen.getByText(/Cancelar o torneio\?/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Confirmar cancelamento" }));
 
     const saved = JSON.parse(window.localStorage.getItem(TENNIS_STORAGE_KEYS.matchHistoryV1) ?? "[]") as Array<{ winnerId: string }>;
@@ -47,9 +72,9 @@ describe("TennisTournamentWorkspace", () => {
     const user = userEvent.setup();
     const { unmount } = render(<TennisTournamentWorkspace />);
 
-    await user.clear(screen.getByLabelText("Participantes"));
-    await user.type(screen.getByLabelText("Participantes"), "Ana, Bia");
-    await user.click(screen.getByRole("button", { name: "Iniciar campeonato" }));
+    await user.type(screen.getByLabelText("Nome do torneio"), "Copa local");
+    await user.type(screen.getByLabelText("Participantes separados por vírgula"), "Ana, Bia");
+    await user.click(screen.getByRole("button", { name: "Criar torneio" }));
     await user.click(screen.getByRole("button", { name: "Jogar partida" }));
     await user.click(screen.getByRole("button", { name: "Ponto para Ana" }));
 
@@ -67,12 +92,12 @@ describe("TennisTournamentWorkspace", () => {
     const user = userEvent.setup();
     render(<TennisTournamentWorkspace />);
 
-    await user.clear(screen.getByLabelText("Participantes"));
-    await user.type(screen.getByLabelText("Participantes"), "Ana, Bia");
-    await user.click(screen.getByRole("button", { name: "Iniciar campeonato" }));
+    await user.type(screen.getByLabelText("Nome do torneio"), "Copa local");
+    await user.type(screen.getByLabelText("Participantes separados por vírgula"), "Ana, Bia");
+    await user.click(screen.getByRole("button", { name: "Criar torneio" }));
     await user.click(screen.getByRole("button", { name: "Jogar partida" }));
     await user.click(screen.getByRole("button", { name: "Ponto para Ana" }));
-    await user.click(screen.getByRole("button", { name: "Voltar ao campeonato" }));
+    await user.click(screen.getByRole("button", { name: "Voltar ao torneio" }));
     await user.click(screen.getByRole("button", { name: "Jogar partida" }));
 
     expect(screen.getByLabelText("Placar do super tie-break")).toHaveTextContent("1 × 0");
@@ -116,7 +141,7 @@ describe("TennisTournamentWorkspace", () => {
     });
   });
 
-  it("cancels an elimination match, discards its active score, and allows a new championship", async () => {
+  it("cancels an elimination tournament from its overview, discards the active score, and allows a new tournament", async () => {
     const user = userEvent.setup();
     window.localStorage.setItem(TENNIS_STORAGE_KEYS.currentTournamentV1, JSON.stringify({
       id: "cup-elim", name: "Copa", phase: "elimination", status: "elimination_in_progress",
@@ -126,14 +151,17 @@ describe("TennisTournamentWorkspace", () => {
       eliminationBracket: { rounds: [{ number: 1, matches: [{ id: "final", round: 1, position: 0, participants: [{ id: "a", name: "Ana" }, { id: "b", name: "Bia" }], status: "ready" }] }] },
     }));
     render(<TennisTournamentWorkspace />);
-    await user.click(screen.getByRole("button", { name: "Cancelar campeonato" }));
+    expect(screen.queryByRole("button", { name: /^Cancelar /i })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Voltar ao torneio" }));
+    await user.click(screen.getByRole("button", { name: "Cancelar torneio" }));
     await user.click(screen.getByRole("button", { name: "Confirmar cancelamento" }));
     const archive = JSON.parse(window.localStorage.getItem(TENNIS_STORAGE_KEYS.tournamentHistoryV1) ?? "[]") as Array<{ status: string; activeMatch?: unknown }>;
     expect(archive[0]).toMatchObject({ status: "cancelled" });
     expect(archive[0].activeMatch).toBeUndefined();
     expect(JSON.parse(window.localStorage.getItem(TENNIS_STORAGE_KEYS.matchHistoryV1) ?? "[]")).toEqual([]);
-    await user.click(screen.getByRole("button", { name: "Iniciar novo campeonato" }));
-    expect(screen.getByLabelText("Participantes")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Iniciar novo torneio" }));
+    expect(screen.getByLabelText("Participantes separados por vírgula")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Histórico de torneios" })).toBeInTheDocument();
     expect(screen.getByText(/Copa · Cancelado/)).toBeInTheDocument();
   });
 

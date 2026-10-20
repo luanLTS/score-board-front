@@ -23,7 +23,7 @@ describe("TennisMatchView", () => {
     expect(screen.getByText("6 × 4")).toBeInTheDocument();
     expect(screen.getByText("Sacando: Bia")).toBeInTheDocument();
     expect(screen.getByText("Troca de lado após 6 pontos")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Ponto para Ana" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ponto para Ana" })).toHaveClass("bg-teal-300");
     expect(screen.getByRole("button", { name: "Ponto para Bia" })).toBeInTheDocument();
   });
 

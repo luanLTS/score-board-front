@@ -16,9 +16,9 @@ export function TennisMatchView({
   const currentGame = match.format === "best_of_three_games" ? match.games.at(-1) : undefined;
 
   return (
-    <section aria-labelledby="tennis-match-title" className="space-y-6 rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
+    <section aria-labelledby="tennis-match-title" className="space-y-6 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 shadow-xl shadow-black/10 sm:p-6">
       <header className="space-y-2">
-        <p className="text-sm font-medium uppercase text-amber-300">Partida de tênis</p>
+        <p className="text-sm font-medium uppercase text-teal-300">Partida de tênis</p>
         <h2 className="text-2xl font-bold" id="tennis-match-title">
           {match.format === "super_tiebreak" ? "Super tie-break" : "Melhor de 3 games"}
         </h2>
@@ -49,14 +49,14 @@ export function TennisMatchView({
       ) : null}
 
       {match.status === "finished" && match.winnerId ? (
-        <p className="text-center font-semibold text-amber-300">
+        <p className="text-center font-semibold text-teal-300">
           Vencedor: {participantNames[match.winnerId]}
         </p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {[firstParticipant, secondParticipant].map((participantId) => (
             <button
-              className="rounded-md bg-amber-300 px-4 py-3 font-bold text-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-md bg-teal-300 px-4 py-3 font-bold text-zinc-950 transition hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={match.status === "finished"}
               key={participantId}
               onClick={() => onPoint(participantId)}

@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from "react";
 
 import type { TournamentParticipant } from "../types";
-import { TournamentParticipants } from "./TournamentParticipants";
 
 export type TournamentFormValues = {
   name: string;
@@ -20,27 +19,16 @@ const participantId = () =>
 
 export function TournamentForm({ onSubmit, disabled = false }: TournamentFormProps) {
   const [name, setName] = useState("");
-  const [newParticipant, setNewParticipant] = useState("");
-  const [participants, setParticipants] = useState<TournamentParticipant[]>([]);
-  const trimmedParticipant = newParticipant.trim();
-  const canAdd =
-    trimmedParticipant.length > 0 &&
-    !participants.some(
-      (participant) => participant.name.toLocaleLowerCase() === trimmedParticipant.toLocaleLowerCase(),
-    );
-
-  const addParticipant = () => {
-    if (!canAdd || disabled) return;
-    setParticipants((current) => [
-      ...current,
-      { id: participantId(), name: trimmedParticipant },
-    ]);
-    setNewParticipant("");
-  };
+  const [participantsText, setParticipantsText] = useState("");
+  const participantNames = participantsText.split(",").map((participant) => participant.trim()).filter(Boolean);
+  const normalizedNames = participantNames.map((participant) => participant.toLocaleLowerCase("pt-BR"));
+  const hasDuplicates = new Set(normalizedNames).size !== normalizedNames.length;
+  const canSubmit = Boolean(name.trim()) && participantNames.length >= 2 && !hasDuplicates;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!name.trim() || participants.length < 2 || disabled) return;
+    if (!canSubmit || disabled) return;
+    const participants: TournamentParticipant[] = participantNames.map((participantName) => ({ id: participantId(), name: participantName }));
     onSubmit({ name: name.trim(), participants });
   };
 
@@ -53,7 +41,7 @@ export function TournamentForm({ onSubmit, disabled = false }: TournamentFormPro
         <p className="text-sm font-medium uppercase text-amber-300">Novo torneio</p>
         <h2 className="text-2xl font-bold">Monte o chaveamento</h2>
         <p className="text-sm text-zinc-400">
-          Adicione ao menos dois participantes. O formato é eliminatório simples.
+          Informe ao menos dois participantes separados por vírgula. O formato é eliminatório simples.
         </p>
       </header>
 
@@ -68,49 +56,22 @@ export function TournamentForm({ onSubmit, disabled = false }: TournamentFormPro
         />
       </label>
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-300" htmlFor="new-tournament-participant">
-          Nome do participante
-        </label>
-        <div className="mt-2 flex gap-2">
-          <input
-            className="min-w-0 flex-1 rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 outline-none focus:border-amber-300 focus:ring-2 focus:ring-amber-300/20"
-            disabled={disabled}
-            id="new-tournament-participant"
-            onChange={(event) => setNewParticipant(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                addParticipant();
-              }
-            }}
-            placeholder="Nome ou equipe"
-            value={newParticipant}
-          />
-          <button
-            className="rounded-md border border-amber-300/60 px-4 py-2 font-semibold text-amber-200 disabled:opacity-40"
-            disabled={disabled || !canAdd}
-            onClick={addParticipant}
-            type="button"
-          >
-            Adicionar
-          </button>
-        </div>
-        {trimmedParticipant && !canAdd ? (
-          <p className="mt-2 text-xs text-amber-300">Esse participante já foi adicionado.</p>
-        ) : null}
-      </div>
-
-      {participants.length ? (
-        <TournamentParticipants
-          onRemove={(id) => setParticipants((current) => current.filter((item) => item.id !== id))}
-          participants={participants}
+      <label className="block text-sm font-medium text-zinc-300" htmlFor="new-tournament-participants">
+        Participantes separados por vírgula
+        <input
+          className="mt-2 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 outline-none focus:border-amber-300 focus:ring-2 focus:ring-amber-300/20"
+          disabled={disabled}
+          id="new-tournament-participants"
+          onChange={(event) => setParticipantsText(event.target.value)}
+          placeholder="Ana, Bia, Carlos"
+          value={participantsText}
         />
-      ) : null}
+        {hasDuplicates ? <span className="mt-2 block text-xs text-amber-300">Os participantes devem ter nomes únicos.</span> : null}
+      </label>
 
       <button
         className="w-full rounded-md bg-amber-300 px-4 py-3 font-bold text-zinc-950 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-40"
-        disabled={disabled || !name.trim() || participants.length < 2}
+        disabled={disabled || !canSubmit}
         type="submit"
       >
         Criar torneio
