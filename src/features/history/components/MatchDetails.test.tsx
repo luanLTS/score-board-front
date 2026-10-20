@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { FinishedMatch } from "../../matches/types";
 
@@ -20,6 +20,8 @@ const match = {
 } as FinishedMatch;
 
 describe("MatchDetails", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   it("renders an empty state when no match is selected", () => {
     render(<MatchDetails match={null} />);
 
@@ -27,6 +29,7 @@ describe("MatchDetails", () => {
   });
 
   it("renders participants, score, type, finished status, start, and finish times", () => {
+    vi.stubEnv("TZ", "America/Sao_Paulo");
     render(<MatchDetails match={match} />);
 
     expect(screen.getByRole("heading", { name: "Ana x Bruno" }))
@@ -38,6 +41,14 @@ describe("MatchDetails", () => {
     expect(screen.getByText("15/06/2026 17:00")).toBeInTheDocument();
     expect(screen.getByText("15/06/2026 17:35")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Compartilhar resultado" })).toBeVisible();
+  });
+
+  it("shows match times in the visitor's local timezone", () => {
+    vi.stubEnv("TZ", "UTC");
+    render(<MatchDetails match={match} />);
+
+    expect(screen.getByText("15/06/2026 20:00")).toBeInTheDocument();
+    expect(screen.getByText("15/06/2026 20:35")).toBeInTheDocument();
   });
 
   it("renders an explicit draw result", () => {
